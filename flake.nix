@@ -14,6 +14,7 @@
             ps.numpy
             ps.matplotlib
             ps.h5py
+            ps.qutip
           ]))
         ];
       };
