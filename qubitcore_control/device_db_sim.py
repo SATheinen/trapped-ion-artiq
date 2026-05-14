@@ -2,7 +2,7 @@ device_db = {
 
     "core": {
         "type": "local",
-        "module": "artiq.sim.core",
+        "module": "sim.core",
         "class": "Core",
         "arguments": {}
     },
