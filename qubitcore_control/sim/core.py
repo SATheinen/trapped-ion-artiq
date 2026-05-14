@@ -1,9 +1,8 @@
-from artiq.language.core import set_time_manager
-from artiq.language.simulation import DummyTimeManager
+from artiq.language.core import set_time_manager, _DummyTimeManager
 
 class SimCore:
     def __init__(self, dmgr, **kwargs):
-        set_time_manager(DummyTimeManager())
+        set_time_manager(_DummyTimeManager())
     
     def reset(self):
         pass
