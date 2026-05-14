@@ -1,4 +1,4 @@
-from artiq.language.decorators import kernel
+from artiq.experiment import kernel
 from artiq.language.types import TFloat, TInt32
 
 class DetectionModule():
