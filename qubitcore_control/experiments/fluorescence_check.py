@@ -15,6 +15,7 @@ class FluorescenceCheck(EnvExperiment):
 
     def prepare(self):
         self.n_shots = int(self.n_shots)
+        self.duration = float(self.duration)
 
         bright_result = np.zeros(self.n_shots)
         dark_result = np.zeros(self.n_shots)
@@ -33,15 +34,23 @@ class FluorescenceCheck(EnvExperiment):
         self.prepare_state(0)
 
         for shot in range(self.n_shots):
-            count = self.detection.count(self.duration)
-            self.mutate_dataset("bright_fluorescence_count", shot, count) # Dataset name, index, value
+            self.measure_bright(shot)
 
         # Dark experiment
         self.prepare_state(1)
 
         for shot in range(self.n_shots):
-            count = self.detection.count(self.duration)
-            self.mutate_dataset("dark_fluorescence_count", shot, count) # Dataset name, index, value
+            self.measure_dark(shot)
+
+    @kernel
+    def measure_bright(self, shot: TInt32):
+        count = self.detection.count(self.duration)
+        self.mutate_dataset("bright_fluorescence_count", shot, count) # Dataset name, index, value
+
+    @kernel
+    def measure_dark(self, shot: TInt32):
+        count = self.detection.count(self.duration)
+        self.mutate_dataset("dark_fluorescence_count", shot, count) # Dataset name, index, value
     
     def analyze(self):
         mean_bright = np.mean(self.get_dataset("bright_fluorescence_count"))
