@@ -27,7 +27,6 @@ class FluorescenceCheck(EnvExperiment):
         from sim.ion_chain import ion
         ion.set_state(state)
 
-    @kernel
     def run(self):
         
         # Bright experiment
