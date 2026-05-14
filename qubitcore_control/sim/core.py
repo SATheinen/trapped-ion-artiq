@@ -12,3 +12,6 @@ class SimCore:
     
     def mu_to_seconds(self, mu):
         return mu * 1e-9
+    
+    def run(self, func, args, kwargs):
+        return func(*args, **kwargs)
