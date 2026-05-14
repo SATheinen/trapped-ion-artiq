@@ -1,5 +1,5 @@
 import numpy as np
-from ion_chain import ion
+from sim.ion_chain import ion
 from artiq.language.types import TFloat, TInt32
 
 class SimPMT:
