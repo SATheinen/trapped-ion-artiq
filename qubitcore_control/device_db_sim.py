@@ -3,7 +3,7 @@ device_db = {
     "core": {
         "type": "local",
         "module": "sim.core",
-        "class": "Core",
+        "class": "SimCore",
         "arguments": {}
     },
 

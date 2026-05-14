@@ -1,9 +1,15 @@
-# Dummy function we need in simulations only
-class Core:
+from artiq.language.core import set_time_manager
+from artiq.language.simulation import DummyTimeManager
 
-    def __init__(self, device_mgr):
-        self.device_mgr = device_mgr # Ignore
-
-    # Dummy function, do nothing
-    def reset():
-        return None
+class SimCore:
+    def __init__(self, dmgr, **kwargs):
+        set_time_manager(DummyTimeManager())
+    
+    def reset(self):
+        pass
+    
+    def seconds_to_mu(self, t):
+        return int(t * 1e9)
+    
+    def mu_to_seconds(self, mu):
+        return mu * 1e-9
