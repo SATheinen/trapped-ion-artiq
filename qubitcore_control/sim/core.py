@@ -14,4 +14,4 @@ class SimCore:
         return mu * 1e-9
     
     def run(self, func, args, kwargs):
-        return func(*args, **kwargs)
+        return func.artiq_embedded.function(*args, **kwargs)
