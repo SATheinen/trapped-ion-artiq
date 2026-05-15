@@ -15,6 +15,7 @@
             ps.matplotlib
             ps.h5py
             ps.qutip
+            ps.dax
           ]))
         ];
       };
