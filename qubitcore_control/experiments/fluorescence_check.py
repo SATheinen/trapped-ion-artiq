@@ -23,21 +23,25 @@ class FluorescenceCheck(EnvExperiment):
         self.set_dataset("bright_fluorescence_count", bright_result)
         self.set_dataset("dark_fluorescence_count", dark_result)
 
-    # only for simulation approach
+    ##################################
+    # sim-only
     def prepare_state(self, state):
         from sim.ion_chain import ion
         ion.set_state(state)
+    ##################################
 
     def run(self):
         
         # Bright experiment
-        self.prepare_state(0)
+        # sim-only
+        self.prepare_state(state=0)
 
         for shot in range(self.n_shots):
             self.measure_bright(shot)
 
         # Dark experiment
-        self.prepare_state(1)
+        # sim-only
+        self.prepare_state(state=1)
 
         for shot in range(self.n_shots):
             self.measure_dark(shot)

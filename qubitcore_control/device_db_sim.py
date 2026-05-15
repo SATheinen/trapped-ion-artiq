@@ -12,5 +12,12 @@ device_db = {
         "module": "sim.devices",
         "class": "SimPMT",
         "arguments": {}
+    },
+
+    "dds_729": {
+        "type": "local",
+        "module": "sim.devices",
+        "class": "SimDDS729",
+        "arguments": {}
     }
 }
