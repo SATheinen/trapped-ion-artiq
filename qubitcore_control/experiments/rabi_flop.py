@@ -85,7 +85,6 @@ class RabiFlop(EnvExperiment):
         t = self.pulse_durations
         data = self.get_dataset("duration_photon_count")
 
-        # ── Fit ──────────────────────────────────────────────────────
         def rabi_model(t, omega, phi, A, offset):
             return A * np.cos(omega * t + phi) + offset
 
@@ -99,5 +98,11 @@ class RabiFlop(EnvExperiment):
         f_rabi = omega_fit / (2 * np.pi)
         t_fine = np.linspace(t.min(), t.max(), 2000)
 
+        fig, ax = plt.subplots()
+        ax.scatter(t * 1e6, data, s=10, label="data")
+        ax.plot(t_fine * 1e6, rabi_model(t_fine, *popt), label="fit")
+        ax.set_xlabel("Pulse duration (µs)")
+        ax.set_ylabel("Photon count")
+        ax.legend()
         plt.savefig("rabi_flop.pdf")
         print(f"π-time: {t_pi*1e6:.2f} µs  |  Rabi freq: {f_rabi/1e3:.2f} kHz")
