@@ -1,6 +1,5 @@
-from dax.sim import enable_dax_sim
+device_db = {
 
-device_db = enable_dax_sim(enable=True, ddb={
     "core": {
         "type": "local",
         "module": "sim.core",
@@ -21,4 +20,4 @@ device_db = enable_dax_sim(enable=True, ddb={
         "class": "SimDDS729",
         "arguments": {}
     }
-})
+}
