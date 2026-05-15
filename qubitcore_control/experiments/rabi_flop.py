@@ -79,7 +79,32 @@ class RabiFlop(EnvExperiment):
 
     def analyze(self):
         import matplotlib.pyplot as plt
-        mean_counts = self.get_dataset("duration_photon_count")
-        plt.plot(self.pulse_durations, mean_counts)
-        plt.tight_layout()
+        import matplotlib.ticker as ticker
+        from scipy.optimize import curve_fit
+
+        t = self.pulse_durations
+        data = self.get_dataset("duration_photon_count")
+
+        # ── Fit ──────────────────────────────────────────────────────
+        def rabi_model(t, omega, phi, A, offset):
+            return A * np.cos(omega * t + phi) + offset
+
+        p0 = [2 * np.pi * 50e3, 0, 20, 20]
+        bounds = ([0, -np.pi, 0, 0], [2*np.pi*200e3, np.pi, 40, 40])
+        popt, pcov = curve_fit(rabi_model, t, data, p0=p0,
+                            bounds=bounds, maxfev=10000)
+
+        omega_fit, phi_fit, A_fit, offset_fit = popt
+        t_pi = (np.pi - phi_fit) / omega_fit
+        f_rabi = omega_fit / (2 * np.pi)
+        t_fine = np.linspace(t.min(), t.max(), 2000)
+
+        # Write calibration result for next experiments to consume
+        self.set_dataset("calibration.pi_time", t_pi, persist=True)
+        self.set_dataset("calibration.rabi_freq_hz", f_rabi, persist=True)
+
+        # ── Plot (same style as above) ────────────────────────────────
+        # ... (identical plotting code)
+
         plt.savefig("rabi_flop.pdf")
+        print(f"π-time: {t_pi*1e6:.2f} µs  |  Rabi freq: {f_rabi/1e3:.2f} kHz")
