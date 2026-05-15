@@ -3,7 +3,6 @@ from artiq.language.types import TFloat, TInt32
 from system.modules.laser_729 import Laser729Module
 from system.modules.detection import DetectionModule
 import numpy as np
-import matplotlib.pyplot as plt
 
 class RabiFlop(EnvExperiment):
 
@@ -79,6 +78,7 @@ class RabiFlop(EnvExperiment):
         self.mutate_dataset("shot_photon_count", shot, count)
 
     def analyze(self):
+        import matplotlib.pyplot as plt
         mean_counts = self.get_dataset("duration_photon_count")
         plt.plot(self.pulse_durations, mean_counts)
         plt.tight_layout()
