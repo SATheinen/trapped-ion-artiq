@@ -1,5 +1,7 @@
 from artiq.language.core import set_time_manager, _DummyTimeManager
 
+set_time_manager(_DummyTimeManager())
+
 class SimCore:
     def __init__(self, dmgr, **kwargs):
         self.dmgr = dmgr
@@ -14,5 +16,4 @@ class SimCore:
         return mu * 1e-9
     
     def run(self, func, args, kwargs):
-        set_time_manager(_DummyTimeManager())
         return func.artiq_embedded.function(*args, **kwargs)
