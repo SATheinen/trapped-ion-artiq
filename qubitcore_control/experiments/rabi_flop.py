@@ -82,4 +82,4 @@ class RabiFlop(EnvExperiment):
         mean_counts = self.get_dataset("duration_photon_count")
         plt.plot(self.pulse_durations, mean_counts)
         plt.tight_layout()
-        plt.show()
+        plt.savefig("rabi_flop.pdf")
