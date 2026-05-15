@@ -99,12 +99,5 @@ class RabiFlop(EnvExperiment):
         f_rabi = omega_fit / (2 * np.pi)
         t_fine = np.linspace(t.min(), t.max(), 2000)
 
-        # Write calibration result for next experiments to consume
-        self.set_dataset("calibration.pi_time", t_pi, persist=True)
-        self.set_dataset("calibration.rabi_freq_hz", f_rabi, persist=True)
-
-        # ── Plot (same style as above) ────────────────────────────────
-        # ... (identical plotting code)
-
         plt.savefig("rabi_flop.pdf")
         print(f"π-time: {t_pi*1e6:.2f} µs  |  Rabi freq: {f_rabi/1e3:.2f} kHz")
