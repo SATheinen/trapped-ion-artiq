@@ -39,10 +39,10 @@ class RabiFlop(EnvExperiment):
     # sim-only
     def reset_ion_state(self):
         from sim.ion_chain import ion
-        ion.set_state(state=0)
+        ion.reset_to_ground(ion_index=0)
 
-    def sim_apply_pulse(self, duration):
-        self.laser729._dds_729.apply_pulse(duration)
+    def sim_apply_pulse(self, ion_index, duration):
+        self.laser729._dds_729.apply_pulse(ion_index, duration)
     ##################################
 
     def run(self):
@@ -55,7 +55,7 @@ class RabiFlop(EnvExperiment):
                 
                 # sim-only
                 self.reset_ion_state()
-                self.sim_apply_pulse(pulse_duration)
+                self.sim_apply_pulse(ion_index=0, duration=pulse_duration)
 
                 # Real Hardware
                 self.pulse(pulse_duration) # Send laser pulse

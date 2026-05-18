@@ -23,9 +23,9 @@ class SimDDS729():
     def set_frequency(self, frequency: TFloat) -> TNone:
         self.frequency = frequency
 
-    def apply_pulse(self, duration: TFloat) -> TNone:
+    def apply_pulse(self, ion_index: TInt32, duration: TFloat) -> TNone:
         delta = 2 * np.pi * (self.frequency - ion.RESONANCE_HZ)
-        ion.apply_pulse(duration, delta)
+        ion.apply_pulse(ion_index, duration, delta)
 
     class Switch():
         def __init__(self):

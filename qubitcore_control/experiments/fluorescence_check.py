@@ -25,23 +25,24 @@ class FluorescenceCheck(EnvExperiment):
 
     ##################################
     # sim-only
-    def prepare_state(self, state):
+    def prepare_state(self, theta: float) -> None: 
         from sim.ion_chain import ion
-        ion.set_state(state)
+        ion.reset_to_ground(ion_index=0)
+        ion.rotate(ion_index=0, theta=theta, phi=0.0)
     ##################################
 
     def run(self):
         
         # Bright experiment
         # sim-only
-        self.prepare_state(state=0)
+        self.prepare_state(theta=0)
 
         for shot in range(self.n_shots):
             self.measure_bright(shot)
 
         # Dark experiment
         # sim-only
-        self.prepare_state(state=1)
+        self.prepare_state(theta=np.pi) # 180 degree rotation
 
         for shot in range(self.n_shots):
             self.measure_dark(shot)
