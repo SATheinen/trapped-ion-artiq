@@ -6,7 +6,7 @@ class IonChain:
     def __init__(self):
         self.N_IONS = 3 # Number of Ions in the chain
         self.states = np.array([np.array([1+0j, 0+0j]) for _ in range(self.N_IONS)]) # alpha and beta coefficients of every qbit
-        self.n_bar = 20 # Phonon motional mode, assuming all zones share one mode (Simplification of reality)
+        self.n_bar = 10e4 # Phonon motional mode, assuming all zones share one mode (Simplification of reality)
         self.positions = np.array([0, 0, 1]) # Zone each ion is residing in
 
         self.N_BRIGHT = 40.0 # count / ms
@@ -45,6 +45,10 @@ class IonChain:
 
     def sample_fluorescence(self, ion_index: int, duration: float) -> int:
         p_excited = np.abs(self.states[ion_index, 1])**2
+
+        # No excitation due to too many phonons
+        if self.n_bar > 20.0:
+            return int(self.N_BRIGHT * duration * 1e3)
 
         random_num = np.random.rand()
         if random_num < p_excited:

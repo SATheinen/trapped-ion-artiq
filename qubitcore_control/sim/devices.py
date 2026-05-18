@@ -36,3 +36,15 @@ class SimDDS729():
 
         def off(self):
             self.switch = "off"
+
+class SimDDS397():
+
+    def __init__(self, device_mgr):
+        self.device_mgr = device_mgr # Ignore
+        self.ion = ion
+
+        self.frequency = None
+        self.sw = SimDDS729.Switch()
+
+    def set_frequency(self, frequency: TFloat) -> TNone:
+        self.frequency = frequency

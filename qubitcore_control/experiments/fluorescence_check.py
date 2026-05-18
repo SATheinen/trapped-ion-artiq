@@ -2,7 +2,9 @@ from artiq.experiment import EnvExperiment, kernel, NumberValue
 from artiq.language.types import TFloat, TInt32
 import numpy as np
 from system.modules.detection import DetectionModule
-
+from system.modules.laser_729 import Laser729Module
+from system.modules.laser_397 import Laser397Module
+from system.services.cooling import CoolingService
 
 class FluorescenceCheck(EnvExperiment):
 
@@ -10,8 +12,18 @@ class FluorescenceCheck(EnvExperiment):
         self.setattr_device("core")
         self.setattr_argument("duration", NumberValue(default=1e-3))
         self.setattr_argument("n_shots", NumberValue(default=100))
+
         self.detection = DetectionModule()
         self.detection.build(self)
+        self.laser_729 = Laser729Module()
+        self.laser_729.build(self)
+        self.laser_397 = Laser397Module()
+        self.laser_397.build(self)
+
+        # sim-only
+        from ion_chain import ion
+        self.cooling = CoolingService
+        self.cooling.build(self.laser_397, self.detection, ion)
 
     def prepare(self):
         self.n_shots = int(self.n_shots)
@@ -27,20 +39,28 @@ class FluorescenceCheck(EnvExperiment):
     # sim-only
     def prepare_state(self, theta: float) -> None: 
         from sim.ion_chain import ion
-        ion.reset_to_ground(ion_index=0)
         ion.rotate(ion_index=0, theta=theta, phi=0.0)
     ##################################
 
     def run(self):
-        
-        # Bright experiment
-        # sim-only
-        self.prepare_state(theta=0)
+
+        ## Bright experiment
+
+        # Cool motional modes
+        self.cooling.dopple_cool()
+        # Return to groundstate
+        self.cooling.optical_pump(ion_index=0)
 
         for shot in range(self.n_shots):
             self.measure_bright(shot)
 
-        # Dark experiment
+        ## Dark experiment
+
+        # Cool motional modes
+        self.cooling.dopple_cool()
+        # Return to groundstate
+        self.cooling.optical_pump(ion_index=0)
+
         # sim-only
         self.prepare_state(theta=np.pi) # 180 degree rotation
 

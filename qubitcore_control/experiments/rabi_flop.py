@@ -1,7 +1,9 @@
 from artiq.experiment import EnvExperiment, kernel, NumberValue
 from artiq.language.types import TFloat, TInt32
 from system.modules.laser_729 import Laser729Module
+from system.modules.laser_397 import Laser397Module
 from system.modules.detection import DetectionModule
+from system.services.cooling import CoolingService
 import numpy as np
 
 class RabiFlop(EnvExperiment):
@@ -17,8 +19,15 @@ class RabiFlop(EnvExperiment):
 
         self.laser729 = Laser729Module()
         self.laser729.build(self)
+        self.laser397 = Laser397Module()
+        self.laser397.build(self)
         self.detection = DetectionModule()
         self.detection.build(self)
+
+        # sim-only
+        from ion_chain import ion
+        self.cooling = CoolingService()
+        self.cooling.build(self.laser397, self.detection, ion)
 
     def prepare(self):
         self.measure_duration = float(self.measure_duration)
@@ -37,15 +46,14 @@ class RabiFlop(EnvExperiment):
 
     ##################################
     # sim-only
-    def reset_ion_state(self):
-        from sim.ion_chain import ion
-        ion.reset_to_ground(ion_index=0)
-
     def sim_apply_pulse(self, ion_index, duration):
         self.laser729._dds_729.apply_pulse(ion_index, duration)
     ##################################
 
     def run(self):
+        
+        # Motional mode cooling
+        self.cooling.doppler_cool()
 
         # Set Laser frequency
         self.init_devices()
@@ -53,8 +61,10 @@ class RabiFlop(EnvExperiment):
         for i, pulse_duration in enumerate(self.pulse_durations):
             for shot in range(self.n_shots):
                 
+                # Reset state
+                self.cooling.optical_pump(ion_index=0)                
+
                 # sim-only
-                self.reset_ion_state()
                 self.sim_apply_pulse(ion_index=0, duration=pulse_duration)
 
                 # Real Hardware
