@@ -1,12 +1,13 @@
 from artiq.experiment import kernel, delay, ms, us
 from artiq.language.types import TInt32, TNone
+from ion_chain import ion
 
 class CoolingService:
 
-    def build(self, laser_397, detection, ion_chain):
+    def build(self, laser_397, detection):
         self._laser_397 = laser_397
         self._detection = detection
-        self._ion = ion_chain
+        self._ion = ion # sim-only
 
     @kernel
     def doppler_cool(self) -> TNone:

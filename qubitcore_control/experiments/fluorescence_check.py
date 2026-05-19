@@ -20,10 +20,8 @@ class FluorescenceCheck(EnvExperiment):
         self.laser_397 = Laser397Module()
         self.laser_397.build(self)
 
-        # sim-only
-        from ion_chain import ion
         self.cooling = CoolingService
-        self.cooling.build(self.laser_397, self.detection, ion)
+        self.cooling.build(self.laser_397, self.detection)
 
     def prepare(self):
         self.n_shots = int(self.n_shots)
@@ -34,13 +32,6 @@ class FluorescenceCheck(EnvExperiment):
 
         self.set_dataset("bright_fluorescence_count", bright_result)
         self.set_dataset("dark_fluorescence_count", dark_result)
-
-    ##################################
-    # sim-only
-    def prepare_state(self, theta: float) -> None: 
-        from sim.ion_chain import ion
-        ion.rotate(ion_index=0, theta=theta, phi=0.0)
-    ##################################
 
     def run(self):
 
@@ -61,8 +52,8 @@ class FluorescenceCheck(EnvExperiment):
         # Return to groundstate
         self.cooling.optical_pump(ion_index=0)
 
-        # sim-only
-        self.prepare_state(theta=np.pi) # 180 degree rotation
+        # Apply 90 degree rotation
+        self.laser_729.bloch_pulse(ion_index=0, theta=np.pi, phi=0.0) # 180 degree rotation
 
         for shot in range(self.n_shots):
             self.measure_dark(shot)

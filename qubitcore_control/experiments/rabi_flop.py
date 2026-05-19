@@ -24,10 +24,8 @@ class RabiFlop(EnvExperiment):
         self.detection = DetectionModule()
         self.detection.build(self)
 
-        # sim-only
-        from ion_chain import ion
         self.cooling = CoolingService()
-        self.cooling.build(self.laser397, self.detection, ion)
+        self.cooling.build(self.laser397, self.detection)
 
     def prepare(self):
         self.measure_duration = float(self.measure_duration)
@@ -44,12 +42,6 @@ class RabiFlop(EnvExperiment):
         self.set_dataset("shot_photon_count", shot_results)
         self.set_dataset("duration_photon_count", duration_results)
 
-    ##################################
-    # sim-only
-    def sim_apply_pulse(self, ion_index, duration):
-        self.laser729._dds_729.apply_pulse(ion_index, duration)
-    ##################################
-
     def run(self):
         
         # Motional mode cooling
@@ -63,9 +55,6 @@ class RabiFlop(EnvExperiment):
                 
                 # Reset state
                 self.cooling.optical_pump(ion_index=0)                
-
-                # sim-only
-                self.sim_apply_pulse(ion_index=0, duration=pulse_duration)
 
                 # Real Hardware
                 self.pulse(pulse_duration) # Send laser pulse

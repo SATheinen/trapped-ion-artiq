@@ -1,13 +1,20 @@
 from artiq.language.core import set_time_manager
+from ion_chain import ion
 
 class NoOpTimeManager:
     _time = 0
 
     def take_time(self, duration):
         self._time += duration
+        # time evolution in simulation
+        for ion_index in range(ion.N_IONS):
+            ion.evolve_free(ion_index, 1e-3, duration)
 
     def take_time_mu(self, duration):
         self._time += duration
+        # time evolution in simulation
+        for ion_index in range(ion.N_IONS):
+            ion.evolve_free(ion_index, 1e-3, duration)
 
     def get_time_mu(self):
         return self._time

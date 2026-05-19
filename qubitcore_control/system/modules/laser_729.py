@@ -1,5 +1,5 @@
 from artiq.experiment import kernel, delay
-from artiq.language import TFloat, TNone
+from artiq.language import TFloat, TNone, TInt32
 
 class Laser729Module():
 
@@ -11,8 +11,25 @@ class Laser729Module():
         self._dds_729.set_frequency(frequency)
     
     @kernel
-    def pulse(self, duration: TFloat) -> TNone:
+    def pulse(self, ion_index: TInt32, duration: TFloat, phi: TFloat) -> TNone:
+        
+        # sim-only
+        self._dds_729.apply_pulse(ion_index, duration, phi)
 
+        # Hardware
+        self._dds_729.sw.on() # Switch AOM on
+        delay(duration) # Wait
+        self._dds_729.sw.off() # Switch AOM off
+
+    @kernel
+    def bloch_pulse(self, ion_index: TInt32, theta: TFloat, phi: TFloat) -> TNone:
+
+        # sim-only
+        from ion_chain import ion
+        duration = theta / ion.omega_rabi # which unit?
+        self._dds_729.bloch_pulse(ion_index, duration, phi)
+
+        # Hardware
         self._dds_729.sw.on() # Switch AOM on
         delay(duration) # Wait
         self._dds_729.sw.off() # Switch AOM off
