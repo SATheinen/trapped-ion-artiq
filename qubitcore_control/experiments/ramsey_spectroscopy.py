@@ -49,6 +49,9 @@ class RamseySpectroscopy(EnvExperiment):
         self.laser_729.set_phase(0)
 
     def run(self):
+
+        self.init_device()
+
         self.cooling.doppler_cool()
 
         for i in range(self.n_points):
