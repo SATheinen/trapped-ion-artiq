@@ -44,6 +44,8 @@ class RamseySpectroscopy(EnvExperiment):
         self.set_dataset("p_excited", np.zeros(self.n_points), broadcast=True)
         self.set_dataset("counts", np.zeros((self.n_points, self.n_shots)), broadcast=True)
 
+        self._counts = np.zeros((self.n_points, self.n_shots))
+
     def init_device(self):
         self.laser_729.set_frequency(200e6 + self.detuning_hz)
         self.laser_729.set_phase(0)
@@ -51,15 +53,15 @@ class RamseySpectroscopy(EnvExperiment):
     def run(self):
 
         self.init_device()
-
         self.cooling.doppler_cool()
 
         for i in range(self.n_points):
             for shot in range(self.n_shots):
                 self.cooling.optical_pump()
                 T = self.wait_times[i]
-                counts = self.pulses_and_count(T)
-                self.mutate_dataset("counts", (i, shot), counts)
+                self._counts[i, shot] = self.pulses_and_count(T)
+
+        self.mutate_dataset("counts", self._counts, broadcast=True)
 
     @kernel
     def pulses_and_count(self, T: TFloat) -> TInt32:
