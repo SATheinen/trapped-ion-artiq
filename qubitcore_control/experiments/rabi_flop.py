@@ -52,7 +52,7 @@ class RabiFlop(EnvExperiment):
         self.cooling.doppler_cool()
 
         # Set Laser frequency and phase
-        self.init_devices()
+        self.init_device()
 
         for i, pulse_duration in enumerate(self.pulse_durations):
             for shot in range(self.n_shots):
@@ -67,14 +67,13 @@ class RabiFlop(EnvExperiment):
             average_photons = np.mean(self.get_dataset("shot_photon_count")) # Average counts over shots
             self.mutate_dataset("duration_photon_count", i, average_photons) # write to dataset
 
-    @kernel
-    def init_devices(self):
+    def init_device(self):
         self.laser_729.set_frequency(self.laser_frequency)
         self.laser_729.set_phase(self.laser_phase)
 
     @kernel
     def pulse(self, duration: TFloat):
-        self.laser729.pulse(duration)            
+        self.laser_729.pulse(duration)            
 
     @kernel
     def measure(self, shot: TInt32):

@@ -26,6 +26,7 @@ class SimDDS729():
 
     def set_frequency(self, frequency: TFloat) -> TNone:
         self.frequency = frequency
+        self.ion.laser_freq = frequency
 
     def set_phase(self, phi: TFloat) -> TNone:
         self.phase = phi
@@ -33,7 +34,7 @@ class SimDDS729():
     def _begin_pulse(self):
         # Turn laser on
         self._t_on = time_manager.current_time()
-        self.ion.laser_state = "on"
+        self._laser_on = True
 
     def _end_pulse(self):
         # Check if laser was turned on before
@@ -43,16 +44,13 @@ class SimDDS729():
         # Get pulse duration
         duration = time_manager.current_time() - self._t_on
         # Calculate detuning
-        delta = 2 * np.pi * (self.frequency - self.ion.RESONANCE_HZ)
+        detuning_rad = 2 * np.pi * (self.frequency - self.ion.RESONANCE_HZ)
 
-        # Only fire on ions in the active zone
-        for i in range(self.ion.N_IONS):
-            if self.ion.positions[i] == 0:
-                self.ion.apply_pulse(i, duration, delta, self.phase)
+        self.ion.apply_pulse(duration, detuning_rad, self.phase)
 
         # Turn laser off
         self._t_on = None
-        self.ion.laser_state = "off"
+        self._laser_on = False
 
     class Switch():
         def __init__(self, dds):
@@ -62,10 +60,10 @@ class SimDDS729():
         def on(self):
             self.state = "on"
             self._dds._begin_pulse()
-            self._dds._end_pulse()
 
         def off(self):
             self.state = "off"
+            self._dds._end_pulse()
 
 class SimDDS397Cool():
 
@@ -88,7 +86,7 @@ class SimDDS397Cool():
     def _begin_pulse(self):
         # Turn laser on
         self._t_on = time_manager.current_time()
-        self.ion.laser_state = "on"
+        self._laser_on = True
 
     def _end_pulse(self):
         # Check if laser was turned on before
@@ -98,15 +96,13 @@ class SimDDS397Cool():
         # Get pulse duration
         duration = time_manager.current_time() - self._t_on
         
-        # Only fire on ions in the active zone
-        for i in range(self.ion.N_IONS):
-            if self.ion.positions[i] == 0:
-                # 397 laser depopulates the motional modes
-                self.ion.n_bar = self.ion.n_eq + (self.ion.n_bar - self.ion.n_eq) * np.exp(-2000 * duration)
+        # 397 laser depopulates the motional modes
+        if np.any(self.ion.positions == 0):
+            self.ion.n_bar = self.ion.n_eq + (self.ion.n_bar - self.ion.n_eq) * np.exp(-2000 * duration)
 
         # Turn laser off
         self._t_on = None
-        self.ion.laser_state = "off"
+        self._laser_on = False
 
 class SimDDS397Pump():
 
@@ -129,18 +125,15 @@ class SimDDS397Pump():
     def _begin_pulse(self):
         # Turn laser on
         self._t_on = time_manager.current_time()
-        self.ion.laser_state = "on"
+        self._laser_on = True
 
     def _end_pulse(self):
         # Check if laser was turned on before
         if self._t_on == None:
             return
         
-        # Only fire on ions in the active zone
-        for i in range(self.ion.N_IONS):
-            if self.ion.positions[i] == 0:
-                self.ion.reset_to_ground(i)
+        self.ion.reset_to_ground()
 
         # Turn laser off
         self._t_on = None
-        self.ion.laser_state = "off"
+        self._laser_on = False

@@ -1,7 +1,7 @@
 from artiq.language.core import set_time_manager
 from sim.ion_chain import ion
 
-class _SimTimeManager:
+class SimTimeManager:
     def __init__(self):
         self._t = 0.0
         self._laser_on = False   # set by SimDDS729 begin/end pulse
@@ -29,7 +29,7 @@ class _SimTimeManager:
     def current_time(self):  return self._t
     def set_laser_on(self, on):  self._laser_on = on
 
-time_manager = _SimTimeManager()
+time_manager = SimTimeManager()
 set_time_manager(time_manager)
 
 class SimCore:

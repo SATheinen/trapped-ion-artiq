@@ -42,7 +42,7 @@ class FluorescenceCheck(EnvExperiment):
         # Cool motional modes
         self.cooling.doppler_cool()
         # Return to groundstate
-        self.cooling.optical_pump(ion_index=0)
+        self.cooling.optical_pump()
 
         for shot in range(self.n_shots):
             self.measure_bright(shot)
@@ -55,7 +55,7 @@ class FluorescenceCheck(EnvExperiment):
         self.cooling.optical_pump()
 
         # Apply 90 degree rotation
-        self.laser_729.bloch_pulse(ion_index=0, theta=np.pi, phi=0.0) # 180 degree rotation
+        self.laser_729.pulse(1 / (2 * 50e3)) # 180 degree rotation
 
         for shot in range(self.n_shots):
             self.measure_dark(shot)

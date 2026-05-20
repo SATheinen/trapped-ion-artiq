@@ -18,9 +18,3 @@ class Laser729Module():
         self._dds_729.sw.on() # Switch AOM on
         delay(duration) # Wait
         self._dds_729.sw.off() # Switch AOM off
-
-    @kernel
-    def bloch_pulse(self, theta: TFloat, phi: TFloat) -> TNone:
-        self._dds_729.sw.on() # Switch AOM on
-        delay(0.0) # Wait
-        self._dds_729.sw.off() # Switch AOM off
