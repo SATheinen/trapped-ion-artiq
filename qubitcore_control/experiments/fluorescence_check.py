@@ -45,6 +45,8 @@ class FluorescenceCheck(EnvExperiment):
 
     def run(self):
 
+        self.init_device()
+
         ## Bright experiment
 
         # Cool motional modes
