@@ -79,8 +79,9 @@ class RamseySpectroscopy(EnvExperiment):
         plt.plot(self.wait_times, self.p_excited)
 
         # Curve fitting
-        def ramsey_model(T, A, f, phi, T2, offset):
-            return A * np.cos(2*np.pi*f*T + phi) * np.exp(-T/T2) + offset
+        def ramsey_model(T, f, phi, T2_star):
+            r = np.exp(-T / (2*T2_star))
+            return (1 + 2*r*np.cos(2*np.pi*f*T + phi) + r**2) / 4
         
         p0 = [0.5, self.detuning_hz, 0, 1e-3, 0.5]
         bounds = ([0, 0, -np.pi, 1e-6, 0.0],

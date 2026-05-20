@@ -42,7 +42,7 @@ class IonChain:
         beta = beta * np.exp(1j * detuning_rad * duration)
 
         # T2* dephasing on the coherence:
-        damp = np.exp(-duration / (2*self.T2_star))
+        damp = np.exp(-duration / (self.T2_star))
         beta = beta * damp
 
         self.states[ion_index, :] = np.array([alpha, beta])
