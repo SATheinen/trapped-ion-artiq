@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 class RamseySpectroscopy(EnvExperiment):
 
     def build(self):
+        self.setattr_device("core")
         self.setattr_argument("T_min", NumberValue(default=0.0, unit='s'))
         self.setattr_argument("T_max", NumberValue(default=1e-3, unit='s'))
         self.setattr_argument("n_points", NumberValue(default=100))
