@@ -86,7 +86,6 @@ class SimDDS397Cool():
     def _begin_pulse(self):
         # Turn laser on
         self._t_on = time_manager.current_time()
-        self._laser_on = True
 
     def _end_pulse(self):
         # Check if laser was turned on before
@@ -102,7 +101,6 @@ class SimDDS397Cool():
 
         # Turn laser off
         self._t_on = None
-        self._laser_on = False
 
 class SimDDS397Pump():
 
@@ -125,7 +123,6 @@ class SimDDS397Pump():
     def _begin_pulse(self):
         # Turn laser on
         self._t_on = time_manager.current_time()
-        self._laser_on = True
 
     def _end_pulse(self):
         # Check if laser was turned on before
@@ -136,4 +133,3 @@ class SimDDS397Pump():
 
         # Turn laser off
         self._t_on = None
-        self._laser_on = False
