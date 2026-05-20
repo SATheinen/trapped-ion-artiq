@@ -83,9 +83,9 @@ class RamseySpectroscopy(EnvExperiment):
             r = np.exp(-T / (2*T2_star))
             return (1 + 2*r*np.cos(2*np.pi*f*T + phi) + r**2) / 4
         
-        p0 = [0.5, self.detuning_hz, 0, 1e-3, 0.5]
-        bounds = ([0, 0, -np.pi, 1e-6, 0.0],
-                  [1, 1e5, np.pi, 1.0, 1.0])
+        p0 = [self.detuning_hz, 0, 1e-3]
+        bounds = ([0, -np.pi, 1e-6],
+                  [1e5, np.pi, 1.0])
         popt, pcov = curve_fit(ramsey_model, self.wait_times, self.p_excited,
                                p0=p0, bounds=bounds, maxfev=10000)
         A, f_fit, phi_fit, T2_fit, offset_fit = popt
