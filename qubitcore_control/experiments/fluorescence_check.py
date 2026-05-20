@@ -12,6 +12,8 @@ class FluorescenceCheck(EnvExperiment):
         self.setattr_device("core")
         self.setattr_argument("duration", NumberValue(default=1e-3))
         self.setattr_argument("n_shots", NumberValue(default=100))
+        self.setattr_argument("laser_frequency", NumberValue(default=200e6))
+        self.setattr_argument("laser_phase", NumberValue(default=0))
 
         self.detection = DetectionModule()
         self.detection.build(self)
@@ -28,12 +30,18 @@ class FluorescenceCheck(EnvExperiment):
     def prepare(self):
         self.n_shots = int(self.n_shots)
         self.duration = float(self.duration)
+        self.laser_frequency = float(self.laser_frequency)
+        self.laser_phase = float(self.laser_phase)
 
         bright_result = np.zeros(self.n_shots)
         dark_result = np.zeros(self.n_shots)
 
         self.set_dataset("bright_fluorescence_count", bright_result)
         self.set_dataset("dark_fluorescence_count", dark_result)
+
+    def init_device(self):
+        self.laser_729.set_frequency(self.laser_frequency)
+        self.laser_729.set_phase(self.laser_phase)
 
     def run(self):
 
