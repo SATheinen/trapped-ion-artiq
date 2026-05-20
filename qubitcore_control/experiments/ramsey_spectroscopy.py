@@ -61,7 +61,7 @@ class RamseySpectroscopy(EnvExperiment):
                 T = self.wait_times[i]
                 self._counts[i, shot] = self.pulses_and_count(T)
 
-        self.mutate_dataset("counts", self._counts, broadcast=True)
+        self.set_dataset("counts", self._counts, broadcast=True)
 
     @kernel
     def pulses_and_count(self, T: TFloat) -> TInt32:
