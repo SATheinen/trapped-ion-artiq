@@ -48,11 +48,11 @@ class RabiFlop(EnvExperiment):
 
     def run(self):
         
-        # Motional mode cooling
-        self.cooling.doppler_cool()
-
         # Set Laser frequency and phase
         self.init_device()
+
+        # Motional mode cooling
+        self.cooling.doppler_cool()
 
         for i, pulse_duration in enumerate(self.pulse_durations):
             for shot in range(self.n_shots):
