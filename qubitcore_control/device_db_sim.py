@@ -1,4 +1,3 @@
-
 device_db = {
 
     "core": {
@@ -22,10 +21,17 @@ device_db = {
         "arguments": {}
     },
 
-    "dds_397": {
+    "dds_397_cool": {
         "type": "local",
         "module": "sim.devices",
-        "class": "SimDDS397",
+        "class": "SimDDS397Cool",
+        "arguments": {}
+    },
+
+    "dds_397_pump": {
+        "type": "local",
+        "module": "sim.devices",
+        "class": "SimDDS397Pump",
         "arguments": {}
     }
 }

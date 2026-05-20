@@ -1,7 +1,7 @@
 from artiq.experiment import EnvExperiment, kernel, NumberValue
 from artiq.language.types import TFloat, TInt32
 from system.modules.laser_729 import Laser729Module
-from system.modules.laser_397 import Laser397Module
+from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.modules.detection import DetectionModule
 from system.services.cooling import CoolingService
 import numpy as np
@@ -16,16 +16,19 @@ class RabiFlop(EnvExperiment):
         self.setattr_argument("n_shots", NumberValue(default=100))
         self.setattr_argument("pulse_n_durations", NumberValue(default=100))
         self.setattr_argument("laser_frequency", NumberValue(default=200e6))
+        self.setattr_argument("laser_phase", NumberValue(default=0))
 
-        self.laser729 = Laser729Module()
-        self.laser729.build(self)
-        self.laser397 = Laser397Module()
-        self.laser397.build(self)
         self.detection = DetectionModule()
         self.detection.build(self)
+        self.laser_729 = Laser729Module()
+        self.laser_729.build(self)
+        self.laser_397_cool = Laser397CoolModule()
+        self.laser_397_cool.build(self)
+        self.laser_397_pump = Laser397PumpModule()
+        self.laser_397_pump.build(self)
 
         self.cooling = CoolingService()
-        self.cooling.build(self.laser397, self.detection)
+        self.cooling.build(self.laser_397_cool, self.laser_397_pump, self.detection)
 
     def prepare(self):
         self.measure_duration = float(self.measure_duration)
@@ -34,6 +37,7 @@ class RabiFlop(EnvExperiment):
         self.n_shots = int(self.n_shots)
         self.pulse_n_durations = int(self.pulse_n_durations)
         self.laser_frequency = float(self.laser_frequency)
+        self.laser_phase = float(self.laser_phase)
 
         self.pulse_durations = np.linspace(self.pulse_min_duration, self.pulse_max_duration, self.pulse_n_durations)
         shot_results = np.zeros(self.n_shots)
@@ -47,14 +51,14 @@ class RabiFlop(EnvExperiment):
         # Motional mode cooling
         self.cooling.doppler_cool()
 
-        # Set Laser frequency
+        # Set Laser frequency and phase
         self.init_devices()
 
         for i, pulse_duration in enumerate(self.pulse_durations):
             for shot in range(self.n_shots):
                 
                 # Reset state
-                self.cooling.optical_pump(ion_index=0)                
+                self.cooling.optical_pump()                
 
                 # Real Hardware
                 self.pulse(pulse_duration) # Send laser pulse
@@ -65,7 +69,8 @@ class RabiFlop(EnvExperiment):
 
     @kernel
     def init_devices(self):
-        self.laser729.set_frequency(self.laser_frequency)
+        self.laser_729.set_frequency(self.laser_frequency)
+        self.laser_729.set_phase(self.laser_phase)
 
     @kernel
     def pulse(self, duration: TFloat):
@@ -73,7 +78,7 @@ class RabiFlop(EnvExperiment):
 
     @kernel
     def measure(self, shot: TInt32):
-        count = self.detection.count(self.measure_duration)
+        count = self.detection.count(ion_index=0, duration=self.measure_duration)
         self.mutate_dataset("shot_photon_count", shot, count)
 
     def analyze(self):

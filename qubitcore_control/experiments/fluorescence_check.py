@@ -3,7 +3,7 @@ from artiq.language.types import TFloat, TInt32
 import numpy as np
 from system.modules.detection import DetectionModule
 from system.modules.laser_729 import Laser729Module
-from system.modules.laser_397 import Laser397Module
+from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.services.cooling import CoolingService
 
 class FluorescenceCheck(EnvExperiment):
@@ -17,11 +17,13 @@ class FluorescenceCheck(EnvExperiment):
         self.detection.build(self)
         self.laser_729 = Laser729Module()
         self.laser_729.build(self)
-        self.laser_397 = Laser397Module()
-        self.laser_397.build(self)
+        self.laser_397_cool = Laser397CoolModule()
+        self.laser_397_cool.build(self)
+        self.laser_397_pump = Laser397PumpModule()
+        self.laser_397_pump.build(self)
 
-        self.cooling = CoolingService
-        self.cooling.build(self.laser_397, self.detection)
+        self.cooling = CoolingService()
+        self.cooling.build(self.laser_397_cool, self.laser_397_pump, self.detection)
 
     def prepare(self):
         self.n_shots = int(self.n_shots)
@@ -38,7 +40,7 @@ class FluorescenceCheck(EnvExperiment):
         ## Bright experiment
 
         # Cool motional modes
-        self.cooling.dopple_cool()
+        self.cooling.doppler_cool()
         # Return to groundstate
         self.cooling.optical_pump(ion_index=0)
 
@@ -48,9 +50,9 @@ class FluorescenceCheck(EnvExperiment):
         ## Dark experiment
 
         # Cool motional modes
-        self.cooling.dopple_cool()
+        self.cooling.doppler_cool()
         # Return to groundstate
-        self.cooling.optical_pump(ion_index=0)
+        self.cooling.optical_pump()
 
         # Apply 90 degree rotation
         self.laser_729.bloch_pulse(ion_index=0, theta=np.pi, phi=0.0) # 180 degree rotation
@@ -60,12 +62,12 @@ class FluorescenceCheck(EnvExperiment):
 
     @kernel
     def measure_bright(self, shot: TInt32):
-        count = self.detection.count(self.duration)
+        count = self.detection.count(ion_index=0, duration=self.duration)
         self.mutate_dataset("bright_fluorescence_count", shot, count) # Dataset name, index, value
 
     @kernel
     def measure_dark(self, shot: TInt32):
-        count = self.detection.count(self.duration)
+        count = self.detection.count(ion_index=0, duration=self.duration)
         self.mutate_dataset("dark_fluorescence_count", shot, count) # Dataset name, index, value
     
     def analyze(self):

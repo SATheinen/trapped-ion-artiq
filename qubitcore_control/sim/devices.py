@@ -1,5 +1,6 @@
 import numpy as np
 from sim.ion_chain import ion
+from sim.core import time_manager
 from artiq.language.types import TFloat, TInt32, TNone
 
 class SimPMT:
@@ -8,8 +9,8 @@ class SimPMT:
         self.device_mgr = device_mgr # Ignore
         self.ion = ion
 
-    def count(self, duration: TFloat) -> TInt32:
-        return self.ion.sample_fluorescence(duration)
+    def count(self, ion_index, duration: TFloat) -> TInt32:
+        return self.ion.sample_fluorescence(ion_index, duration)
     
 class SimDDS729():
 
@@ -18,37 +19,128 @@ class SimDDS729():
         self.ion = ion
 
         self.frequency = None
-        self.sw = self.Switch()
+        self.phase = None
+
+        self._t_on = None
+        self.sw = SimDDS729.Switch(self)
 
     def set_frequency(self, frequency: TFloat) -> TNone:
         self.frequency = frequency
 
-    def apply_pulse(self, ion_index: TInt32, duration: TFloat, phi: TFloat) -> TNone:
-        theta = duration * self.ion.omega_rabi
-        ion.apply_rotation(ion_index, theta, phi)
+    def set_phase(self, phi: TFloat) -> TNone:
+        self.phase = phi
 
-    def bloch_pulse(self, ion_index: TInt32, theta: TFloat, phi: TFloat) -> TNone:
-        ion.apply_rotation(self, ion_index, theta, phi)
+    def _begin_pulse(self):
+        # Turn laser on
+        self._t_on = time_manager.current_time()
+        self.ion.laser_state = "on"
 
+    def _end_pulse(self):
+        # Check if laser was turned on before
+        if self._t_on == None:
+            return
+        
+        # Get pulse duration
+        duration = time_manager.current_time() - self._t_on
+        # Calculate detuning
+        delta = 2 * np.pi * (self.frequency - self.ion.RESONANCE_HZ)
+
+        # Only fire on ions in the active zone
+        for i in range(self.ion.N_IONS):
+            if self.ion.positions[i] == 0:
+                self.ion.apply_pulse(i, duration, delta, self.phase)
+
+        # Turn laser off
+        self._t_on = None
+        self.ion.laser_state = "off"
 
     class Switch():
-        def __init__(self):
-            self.switch = "off"
+        def __init__(self, dds):
+            self.state = "off"
+            self._dds = dds
 
         def on(self):
-            self.switch = "on"
+            self.state = "on"
+            self._dds._begin_pulse()
+            self._dds._end_pulse()
 
         def off(self):
-            self.switch = "off"
+            self.state = "off"
 
-class SimDDS397():
+class SimDDS397Cool():
 
     def __init__(self, device_mgr):
         self.device_mgr = device_mgr # Ignore
         self.ion = ion
 
         self.frequency = None
-        self.sw = SimDDS729.Switch()
+        self.phase = None
+
+        self._t_on = None
+        self.sw = SimDDS729.Switch(self)
 
     def set_frequency(self, frequency: TFloat) -> TNone:
         self.frequency = frequency
+
+    def set_phase(self, phi: TFloat) -> TNone:
+        self.phase = phi
+
+    def _begin_pulse(self):
+        # Turn laser on
+        self._t_on = time_manager.current_time()
+        self.ion.laser_state = "on"
+
+    def _end_pulse(self):
+        # Check if laser was turned on before
+        if self._t_on == None:
+            return
+        
+        # Get pulse duration
+        duration = time_manager.current_time() - self._t_on
+        
+        # Only fire on ions in the active zone
+        for i in range(self.ion.N_IONS):
+            if self.ion.positions[i] == 0:
+                # 397 laser depopulates the motional modes
+                self.ion.n_bar = self.ion.n_eq + (self.ion.n_bar - self.ion.n_eq) * np.exp(-2000 * duration)
+
+        # Turn laser off
+        self._t_on = None
+        self.ion.laser_state = "off"
+
+class SimDDS397Pump():
+
+    def __init__(self, device_mgr):
+        self.device_mgr = device_mgr # Ignore
+        self.ion = ion
+
+        self.frequency = None
+        self.phase = None
+
+        self._t_on = None
+        self.sw = SimDDS729.Switch(self)
+
+    def set_frequency(self, frequency: TFloat) -> TNone:
+        self.frequency = frequency
+
+    def set_phase(self, phi: TFloat) -> TNone:
+        self.phase = phi
+
+    def _begin_pulse(self):
+        # Turn laser on
+        self._t_on = time_manager.current_time()
+        self.ion.laser_state = "on"
+
+    def _end_pulse(self):
+        # Check if laser was turned on before
+        if self._t_on == None:
+            return
+        
+        # Only fire on ions in the active zone
+        for i in range(self.ion.N_IONS):
+            if self.ion.positions[i] == 0:
+                self.ion.reset_to_ground(i)
+
+        # Turn laser off
+        self._t_on = None
+        self.ion.laser_state = "off"

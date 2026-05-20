@@ -8,5 +8,5 @@ class DetectionModule():
         self._pmt = experiment.get_device("ttl_pmt")
 
     @kernel
-    def count(self, duration: TFloat) -> TInt32: 
-        return self._pmt.count(duration)
+    def count(self, ion_index:TInt32, duration: TFloat) -> TInt32: 
+        return self._pmt.count(ion_index, duration)

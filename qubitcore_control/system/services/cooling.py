@@ -1,32 +1,17 @@
 from artiq.experiment import kernel, delay, ms, us
 from artiq.language.types import TInt32, TNone
-from ion_chain import ion
 
 class CoolingService:
 
-    def build(self, laser_397, detection):
-        self._laser_397 = laser_397
+    def build(self, laser_397_cool, laser_397_pump, detection):
+        self._laser_397_cool = laser_397_cool
+        self._laser_397_pump = laser_397_pump
         self._detection = detection
-        self._ion = ion # sim-only
 
     @kernel
     def doppler_cool(self) -> TNone:
-        self._laser_397.pulse(3*ms)
-
-        # sim-only
-        self._sim_set_n_bar(20.0)
+        self._laser_397_cool.pulse(3*ms)
 
     @kernel
-    def optical_pump(self, ion_index: TInt32) -> TNone:
-        self._laser_397.pump_pulse(500*us)
-
-        # sim-only
-        self._sim_reset_ion(ion_index)
-
-
-    # sim-only RPCs
-    def _sim_set_n_bar(self, n_bar: float) -> None:
-        self._ion.n_bar = n_bar
-
-    def _sim_reset_ion(self, ion_index: int) -> None:
-        self._ion.reset_to_ground(ion_index)
+    def optical_pump(self) -> TNone:
+        self._laser_397_pump.pulse(500*us)
