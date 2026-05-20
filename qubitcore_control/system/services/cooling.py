@@ -7,6 +7,7 @@ class CoolingService:
         self._laser_397_cool = laser_397_cool
         self._laser_397_pump = laser_397_pump
         self._detection = detection
+        self.core = laser_397_cool.core
 
     @kernel
     def doppler_cool(self) -> TNone:
