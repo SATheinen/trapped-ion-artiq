@@ -89,3 +89,5 @@ class RamseySpectroscopy(EnvExperiment):
 
         self.set_dataset("calibration.T2_star", T2_fit, persist=True)
         self.set_dataset("calibration.laser_detuning_hz", f_fit, persist=True)
+
+        plt.savefig("ramsey_spectroscopy.pdf")
