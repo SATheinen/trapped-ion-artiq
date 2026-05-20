@@ -88,7 +88,7 @@ class RamseySpectroscopy(EnvExperiment):
                   [1e5, np.pi, 1.0])
         popt, pcov = curve_fit(ramsey_model, self.wait_times, self.p_excited,
                                p0=p0, bounds=bounds, maxfev=10000)
-        A, f_fit, phi_fit, T2_fit, offset_fit = popt
+        f_fit, phi_fit, T2_fit = popt
 
         self.set_dataset("calibration.T2_star", T2_fit, persist=True)
         self.set_dataset("calibration.laser_detuning_hz", f_fit, persist=True)
