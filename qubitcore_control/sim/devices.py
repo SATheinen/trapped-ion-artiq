@@ -17,6 +17,7 @@ class SimDDS729():
     def __init__(self, device_mgr):
         self.device_mgr = device_mgr # Ignore
         self.ion = ion
+        self.time_manager = time_manager
 
         self.frequency = None
         self.phase = None
@@ -33,8 +34,8 @@ class SimDDS729():
 
     def _begin_pulse(self):
         # Turn laser on
-        self._t_on = time_manager.current_time()
-        self._laser_on = True
+        self._t_on = self.time_manager.current_time()
+        self.time_manager._laser_on = True
 
     def _end_pulse(self):
         # Check if laser was turned on before
@@ -42,7 +43,7 @@ class SimDDS729():
             return
         
         # Get pulse duration
-        duration = time_manager.current_time() - self._t_on
+        duration = self.time_manager.current_time() - self._t_on
         # Calculate detuning
         detuning_rad = 2 * np.pi * (self.frequency - self.ion.RESONANCE_HZ)
 
@@ -50,7 +51,7 @@ class SimDDS729():
 
         # Turn laser off
         self._t_on = None
-        self._laser_on = False
+        self.time_manager._laser_on = False
 
     class Switch():
         def __init__(self, dds):
