@@ -18,7 +18,7 @@ class IonChain:
         self.T2_star = 1e-3 # 1ms coherence
 
         self.laser_state = "off" # Check if any laser is currently on, required for free_evolution
-        self.laser_freq = None # get laser frequency to calculate detuning
+        self.laser_freq = self.RESONANCE_HZ # get laser frequency to calculate detuning
 
     def current_detuning_rad(self):
         return 2 * np.pi * (self.laser_freq - self.RESONANCE_HZ)
