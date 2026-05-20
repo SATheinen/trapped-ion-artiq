@@ -28,7 +28,7 @@ class IonChain:
             self.states[i, :] = np.array([1+0j, 0+0j])
 
     def current_detuning_rad(self):
-        return 2 * np.pi * (self.laser)
+        return 2 * np.pi * (self.laser_freq - self.RESONANCE_HZ)
 
     def apply_rotation(self, ion_index: int, theta: float, phi: float) -> None:
         c, s = np.cos(theta/2), np.sin(theta/2)
