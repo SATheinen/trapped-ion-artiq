@@ -54,7 +54,7 @@ class SidebandCooling(EnvExperiment):
             self.cooling.doppler_cool()
 
             for i in range(10):
-                self.cooling.sideband_cool(n_cycles=self.n_cooling_steps // 10,
+                self.cooling.sideband_cool(n_cycles=int(self.n_cooling_steps / 10),
                                             duration=pi_pulse_duration(n=(20 -2*i)))
             print(f"shot:{shot}, n:{ion.n_bar}")
 
