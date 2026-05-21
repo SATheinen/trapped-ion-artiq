@@ -13,7 +13,7 @@ class SidebandCooling(EnvExperiment):
     def build(self):
         self.setattr_device("core")
         self.setattr_argument("RESONANCE_HZ", NumberValue(default=200e6, unit='Hz'))
-        self.setattr_argument("secular_freq", NumberValue(default=2*np.pi*1e6, unit='rad/s'))
+        self.setattr_argument("secular_freq", NumberValue(default=2*np.pi*1e6))
         self.setattr_argument("n_points", NumberValue(default=1000))
         self.setattr_argument("n_shots", NumberValue(default=100))
         self.setattr_argument("max_freq", NumberValue(default=3e6, unit='Hz'))
