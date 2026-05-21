@@ -44,7 +44,7 @@ class SidebandCooling(EnvExperiment):
 
     def run(self):
 
-        def pi_pulse_duration(self, n):
+        def pi_pulse_duration(n):
             return np.pi / (self.eta * self.omega_rabi * np.sqrt(n))
 
         self.init_device()
