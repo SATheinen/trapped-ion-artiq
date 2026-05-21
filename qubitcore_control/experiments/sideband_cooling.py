@@ -61,7 +61,7 @@ class SidebandCooling(EnvExperiment):
             for shot in range(self.n_shots):
                 self._counts[i, shot] = self.run_point(i)
 
-            self.mutate_dataset("counts", self._counts[i, :].mean(axis=-1))
+            self.mutate_dataset("counts", i, self._counts[i, :].mean(axis=-1))
                 
     @kernel
     def run_point(self, index):
