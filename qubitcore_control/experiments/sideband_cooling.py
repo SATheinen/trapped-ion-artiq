@@ -45,7 +45,7 @@ class SidebandCooling(EnvExperiment):
     def run(self):
 
         def pi_pulse_duration(n):
-            return np.pi / (self.eta * self.omega_rabi * np.sqrt(n))
+            return np.pi / (ETA * OMEGA_RABI * np.sqrt(n))
 
         self.init_device()
         from sim.ion_chain import ion
