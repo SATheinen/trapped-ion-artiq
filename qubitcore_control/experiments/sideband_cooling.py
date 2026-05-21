@@ -11,7 +11,7 @@ class SidebandCooling(EnvExperiment):
 
     def build(self):
         self.setattr_device("core")
-        self.setattr_argument("init_freq", NumberValue(default=200e6, unit='Hz'))
+        self.setattr_argument("RESONANCE_HZ", NumberValue(default=200e6, unit='Hz'))
         self.setattr_argument("n_points", NumberValue(default=1000))
         self.setattr_argument("max_freq", NumberValue(default=3e6, unit='Hz'))
         self.setattr_argument("min_freq", NumberValue(default=-3e6, unit='Hz'))
@@ -31,7 +31,7 @@ class SidebandCooling(EnvExperiment):
         self.cooling.build(self.laser_397_cool, self.laser_397_pump, self.detection)
 
     def prepare(self):
-        self.init_freq = float(self.init_freq)
+        self.RESONANCE_HZ = float(self.RESONANCE_HZ)
         self.n_points = int(self.n_points)
         self.max_freq = float(self.max_freq)
         self.min_freq = float(self.min_freq)
@@ -42,7 +42,7 @@ class SidebandCooling(EnvExperiment):
         self.set_dataset("counts", np.zeros(self.n_points), broadcast=True)
     
     def init_device(self):
-        self.laser_729.set_frequency(self.init_freq)
+        self.laser_729.set_frequency(self.RESONANCE_HZ)
         self.laser_729.set_phase(0)
 
     def run(self):
