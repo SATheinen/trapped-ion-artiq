@@ -4,6 +4,7 @@ from system.modules.laser_729 import Laser729Module
 from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.modules.detection import DetectionModule
 from system.services.cooling import CoolingService
+from config import RESONANCE_HZ, OMEGA_RABI
 import numpy as np
 
 class RabiFlop(EnvExperiment):
@@ -15,7 +16,7 @@ class RabiFlop(EnvExperiment):
         self.setattr_argument("pulse_max_duration", NumberValue(default=50e-6))
         self.setattr_argument("n_shots", NumberValue(default=100))
         self.setattr_argument("pulse_n_durations", NumberValue(default=100))
-        self.setattr_argument("laser_frequency", NumberValue(default=200e6))
+        self.setattr_argument("laser_frequency", NumberValue(default=RESONANCE_HZ))
         self.setattr_argument("laser_phase", NumberValue(default=0))
 
         self.detection = DetectionModule()
@@ -28,7 +29,7 @@ class RabiFlop(EnvExperiment):
         self.laser_397_pump.build(self)
 
         self.cooling = CoolingService()
-        self.cooling.build(self.laser_397_cool, self.laser_397_pump, self.detection)
+        self.cooling.build(self.laser_729, self.laser_397_cool, self.laser_397_pump, self.detection)
 
     def prepare(self):
         self.measure_duration = float(self.measure_duration)
@@ -90,7 +91,7 @@ class RabiFlop(EnvExperiment):
         def rabi_model(t, omega, phi, A, offset):
             return A * np.cos(omega * t + phi) + offset
 
-        p0 = [2 * np.pi * 50e3, 0, 20, 20]
+        p0 = [OMEGA_RABI, 0, 20, 20]
         bounds = ([0, -np.pi, 0, 0],
                   [2 * np.pi * 200e3, np.pi, 40, 40])
         popt, pcov = curve_fit(rabi_model, t, data, p0=p0,

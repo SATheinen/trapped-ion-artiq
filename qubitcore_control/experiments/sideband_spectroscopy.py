@@ -4,6 +4,7 @@ from system.modules.laser_729 import Laser729Module
 from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.modules.detection import DetectionModule
 from system.services.cooling import CoolingService
+from config import RESONANCE_HZ, SECULAR_FREQ, N_BRIGHT, N_DARK
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -11,8 +12,8 @@ class SidebandSpectroscopy(EnvExperiment):
 
     def build(self):
         self.setattr_device("core")
-        self.setattr_argument("RESONANCE_HZ", NumberValue(default=200e6, unit='Hz'))
-        self.setattr_argument("secular_freq", NumberValue(default=2*np.pi*1e6))
+        self.setattr_argument("RESONANCE_HZ", NumberValue(default=RESONANCE_HZ, unit='Hz'))
+        self.setattr_argument("secular_freq", NumberValue(default=SECULAR_FREQ))
         self.setattr_argument("n_points", NumberValue(default=500))
         self.setattr_argument("n_shots", NumberValue(default=500))
         self.setattr_argument("max_freq", NumberValue(default=3e6, unit='Hz'))
@@ -30,7 +31,7 @@ class SidebandSpectroscopy(EnvExperiment):
         self.laser_397_pump.build(self)
 
         self.cooling = CoolingService()
-        self.cooling.build(self.laser_397_cool, self.laser_397_pump, self.detection)
+        self.cooling.build(self.laser_729, self.laser_397_cool, self.laser_397_pump, self.detection)
 
     def prepare(self):
         self.RESONANCE_HZ = float(self.RESONANCE_HZ)
@@ -78,7 +79,7 @@ class SidebandSpectroscopy(EnvExperiment):
         counts_2d =   self.get_dataset("counts_2d")
 
         # threshold discrimination
-        threshold = (40.0 + 0.5) / 2 * self.measure_duration * 1e3
+        threshold = (N_BRIGHT + N_DARK) / 2 * self.measure_duration * 1e3
         self.set_dataset("p_excited", (counts_2d < threshold).mean(axis=1), broadcast=True)
         p_excited = self.get_dataset("p_excited")
 

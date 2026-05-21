@@ -4,6 +4,7 @@ from system.modules.laser_729 import Laser729Module
 from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.modules.detection import DetectionModule
 from system.services.cooling import CoolingService
+from config import RESONANCE_HZ, OMEGA_RABI, N_BRIGHT, N_DARK, T2_STAR
 from scipy.optimize import curve_fit
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,7 +30,7 @@ class RamseySpectroscopy(EnvExperiment):
         self.laser_397_pump.build(self)
 
         self.cooling = CoolingService()
-        self.cooling.build(self.laser_397_cool, self.laser_397_pump, self.detection)
+        self.cooling.build(self.laser_729, self.laser_397_cool, self.laser_397_pump, self.detection)
 
     def prepare(self):
         self.T_min = float(self.T_min)
@@ -47,7 +48,7 @@ class RamseySpectroscopy(EnvExperiment):
         self._counts = np.zeros((self.n_points, self.n_shots))
 
     def init_device(self):
-        self.laser_729.set_frequency(200e6 + self.detuning_hz)
+        self.laser_729.set_frequency(RESONANCE_HZ + self.detuning_hz)
         self.laser_729.set_phase(0)
 
     def run(self):
@@ -65,15 +66,15 @@ class RamseySpectroscopy(EnvExperiment):
 
     @kernel
     def pulses_and_count(self, T: TFloat) -> TInt32:
-        self.laser_729.pulse((np.pi / 2) / (2 * np.pi * 50e3))
+        self.laser_729.pulse((np.pi / 2) / OMEGA_RABI)
         delay(T)
-        self.laser_729.pulse((np.pi / 2) / (2 * np.pi * 50e3))
+        self.laser_729.pulse((np.pi / 2) / OMEGA_RABI)
         counts = self.detection.count(ion_index=0, duration=self.measure_duration)
         return counts
 
     def analyze(self):
         counts_2d = self.get_dataset("counts")
-        threshold = (40.0 + 0.5) / 2 * self.measure_duration * 1e3
+        threshold = (N_BRIGHT + N_DARK) / 2 * self.measure_duration * 1e3
         excited = counts_2d < threshold
         p_excited = excited.mean(axis=1)
         p_err = np.sqrt(p_excited * (1 - p_excited) / self.n_shots)
@@ -83,7 +84,7 @@ class RamseySpectroscopy(EnvExperiment):
             r = np.exp(-T / T2_star)
             return (1 + 2 * r * np.cos(2 * np.pi * f * T + phi) + r**2) / 4
 
-        p0 = [self.detuning_hz, 0.0, 1e-3]
+        p0 = [self.detuning_hz, 0.0, T2_STAR]
         bounds = ([0, -np.pi, 1e-6], [1e5, np.pi, 1.0])
         popt, pcov = curve_fit(
             ramsey_model, self.wait_times, p_excited,

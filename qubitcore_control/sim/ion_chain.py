@@ -1,21 +1,26 @@
 import numpy as np
+from config import (
+    N_IONS, N_BAR_INITIAL, N_BAR_DOPPLER,
+    N_BRIGHT, N_DARK,
+    OMEGA_RABI, RESONANCE_HZ, SECULAR_FREQ, ETA, T2_STAR,
+)
 
 class IonChain:
 
     def __init__(self):
-        self.N_IONS = 3 # Number of Ions in the chain
+        self.N_IONS = N_IONS
         self.states = np.array([np.array([1+0j, 0+0j]) for _ in range(self.N_IONS)]) # alpha and beta coefficients of every qbit
-        self.n_bar = 10e4 # Phonon motional mode, assuming all zones share one mode (Simplification of reality)
-        self.n_eq = 20 # laser 397 driven equilibrium motional modes
+        self.n_bar = N_BAR_INITIAL # Phonon motional mode, assuming all zones share one mode (Simplification of reality)
+        self.n_eq = N_BAR_DOPPLER # laser 397 driven equilibrium motional modes
         self.positions = np.array([0, 0, 1]) # Zone each ion is residing in
 
-        self.N_BRIGHT = 40.0 # count / ms
-        self.N_DARK = 0.5 # count / ms
-        self.omega_rabi = 2 * np.pi * 50e3 # rad/s
-        self.RESONANCE_HZ = 200e6 # 1/s
-        self.secular_freq = 2*np.pi*1e6
-        self.eta = 0.1
-        self.T2_star = 1e-3 # 1ms coherence
+        self.N_BRIGHT = N_BRIGHT # count / ms
+        self.N_DARK = N_DARK # count / ms
+        self.omega_rabi = OMEGA_RABI # rad/s
+        self.RESONANCE_HZ = RESONANCE_HZ # 1/s
+        self.secular_freq = SECULAR_FREQ
+        self.eta = ETA
+        self.T2_star = T2_STAR # 1ms coherence
 
         self.laser_state = "off" # Check if any laser is currently on, required for free_evolution
         self.laser_freq = self.RESONANCE_HZ # get laser frequency to calculate detuning

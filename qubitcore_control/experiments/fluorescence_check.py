@@ -5,6 +5,7 @@ from system.modules.detection import DetectionModule
 from system.modules.laser_729 import Laser729Module
 from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.services.cooling import CoolingService
+from config import RESONANCE_HZ, OMEGA_RABI
 
 class FluorescenceCheck(EnvExperiment):
 
@@ -12,7 +13,7 @@ class FluorescenceCheck(EnvExperiment):
         self.setattr_device("core")
         self.setattr_argument("duration", NumberValue(default=1e-3))
         self.setattr_argument("n_shots", NumberValue(default=100))
-        self.setattr_argument("laser_frequency", NumberValue(default=200e6))
+        self.setattr_argument("laser_frequency", NumberValue(default=RESONANCE_HZ))
         self.setattr_argument("laser_phase", NumberValue(default=0))
 
         self.detection = DetectionModule()
@@ -25,7 +26,7 @@ class FluorescenceCheck(EnvExperiment):
         self.laser_397_pump.build(self)
 
         self.cooling = CoolingService()
-        self.cooling.build(self.laser_397_cool, self.laser_397_pump, self.detection)
+        self.cooling.build(self.laser_729, self.laser_397_cool, self.laser_397_pump, self.detection)
 
     def prepare(self):
         self.n_shots = int(self.n_shots)
@@ -65,7 +66,7 @@ class FluorescenceCheck(EnvExperiment):
         self.cooling.optical_pump()
 
         # Apply 90 degree rotation
-        self.laser_729.pulse(1 / (2 * 50e3)) # 180 degree rotation
+        self.laser_729.pulse(np.pi / OMEGA_RABI) # 180 degree rotation
 
         for shot in range(self.n_shots):
             self.measure_dark(shot)
