@@ -125,7 +125,7 @@ class SidebandCooling(EnvExperiment):
                     transform=ax.get_xaxis_transform())
 
         ax.plot(
-            freq / 1e6, counts,
+            freq / 1e6, p_excited,
             marker="o", ms=2.8, mfc=DATA_COLOR, mec="none", lw=0,
             alpha=0.65, label="counts",
         )

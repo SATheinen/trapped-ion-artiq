@@ -82,7 +82,6 @@ class RabiFlop(EnvExperiment):
 
     def analyze(self):
         import matplotlib.pyplot as plt
-        import matplotlib.ticker as ticker
         from scipy.optimize import curve_fit
 
         t = self.pulse_durations
@@ -98,15 +97,63 @@ class RabiFlop(EnvExperiment):
                             bounds=bounds, maxfev=10000)
 
         omega_fit, phi_fit, A_fit, offset_fit = popt
+        omega_err, phi_err, A_err, offset_err = np.sqrt(np.diag(pcov))
         t_pi = (np.pi - phi_fit) / omega_fit
         f_rabi = omega_fit / (2 * np.pi)
+        f_rabi_err = omega_err / (2 * np.pi)
         t_fine = np.linspace(t.min(), t.max(), 2000)
 
-        fig, ax = plt.subplots()
-        ax.scatter(t * 1e6, data, s=10, label="data")
-        ax.plot(t_fine * 1e6, rabi_model(t_fine, *popt), label="fit")
-        ax.set_xlabel("Pulse duration (µs)")
-        ax.set_ylabel("Photon count")
-        ax.legend()
-        plt.savefig("rabi_flop.pdf")
         print(f"π-time: {t_pi*1e6:.2f} µs  |  Rabi freq: {f_rabi/1e3:.2f} kHz")
+
+        plt.rcParams.update({
+            "font.family": "DejaVu Sans",
+            "font.size": 11,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.labelsize": 12,
+            "xtick.direction": "in",
+            "ytick.direction": "in",
+        })
+
+        DATA_COLOR = "#2b6cb0"
+        FIT_COLOR  = "#c53030"
+        REF_COLOR  = "#2f855a"
+
+        fig, ax = plt.subplots(figsize=(8.5, 4.8))
+
+        ax.axvline(t_pi * 1e6, color=REF_COLOR, lw=0.8, ls="--", alpha=0.6)
+        ax.text(t_pi * 1e6, 1.02, r"$t_\pi$", color=REF_COLOR,
+                ha="center", va="bottom", fontsize=9,
+                transform=ax.get_xaxis_transform())
+
+        ax.plot(
+            t * 1e6, data,
+            marker="o", ms=3.2, mfc=DATA_COLOR, mec="none", lw=0,
+            alpha=0.65, label=f"data ({self.n_shots} shots/point)",
+        )
+        ax.plot(
+            t_fine * 1e6, rabi_model(t_fine, *popt),
+            color=FIT_COLOR, lw=1.7, label="fit",
+        )
+
+        ax.set_xlabel(r"Pulse duration  $t$  (µs)")
+        ax.set_ylabel("Photon counts")
+        ax.set_xlim(t.min() * 1e6, t.max() * 1e6)
+        ax.grid(True, alpha=0.25, linestyle=":")
+
+        info = (
+            f"$\\Omega/2\\pi = {f_rabi/1e3:.2f} \\pm {f_rabi_err/1e3:.2f}$ kHz\n"
+            f"$t_\\pi = {t_pi*1e6:.2f}$ µs"
+        )
+        ax.text(
+            0.985, 0.96, info, transform=ax.transAxes,
+            ha="right", va="top", fontsize=10,
+            bbox=dict(boxstyle="round,pad=0.4",
+                      facecolor="white", edgecolor="#bbb", alpha=0.92),
+        )
+        ax.legend(loc="lower right", framealpha=0.9, fontsize=9)
+        ax.set_title("Rabi flop", loc="left", fontsize=13, pad=10)
+
+        fig.tight_layout()
+        fig.savefig("rabi_flop.pdf", bbox_inches="tight")
+        plt.close(fig)
