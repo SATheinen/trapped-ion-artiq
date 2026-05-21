@@ -63,7 +63,29 @@ class IonChain:
     def apply_pulse(self, duration: float, detuning_rad: float, phi: float) -> None:
         Omega = self.omega_rabi
         delta = detuning_rad
-        Omega_eff = np.sqrt(Omega**2 + delta**2)
+
+        # distance from resonance
+        d_carrier = abs(delta)
+        d_rsb = abs(delta + self.secular_freq)
+        d_bsb = abs(delta - self.secular_freq)
+
+        # pick nearest
+        if d_carrier <= d_rsb and d_carrier <= d_bsb:
+            eff_rabi = self.omega_rabi
+            residual = delta
+            kind = "carrier"
+        elif d_rsb <= d_bsb:
+            eff_rabi = self.omega_rabi * self.eta * np.sqrt(max(self.n_bar, 1e-6))
+            residual = delta + self.secular_freq
+            kind = "rsb"
+        else:
+            eff_rabi = self.omega_rabi * self.eta * np.sqrt(self.n_bar + 1)
+            residual = delta - self.secular_freq
+            kind = "bsb"
+
+        # generalised Rabi
+        Omega_eff = np.sqrt(eff_rabi**2 + residual**2)
+        p_excited = (eff_rabi/Omega_eff)**2 * np.sin(Omega_eff*duration/2)**2
 
         half = Omega_eff * duration / 2
         c, s = np.cos(half), np.sin(half)
@@ -79,5 +101,11 @@ class IonChain:
         for i in range(self.N_IONS):
             if self.positions[i] == 0: # Only act on active zone
                 self.states[i, :] = U @ self.states[i, :]
+
+        # phonon bookkeeping (approximate)
+        if kind == "rsb":
+            self.n_bar = max(0.0, self.n_bar - p_excited)
+        elif kind == "bsb":
+            self.n_bar = self.n_bar + p_excited
         
 ion = IonChain()

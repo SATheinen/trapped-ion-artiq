@@ -92,7 +92,8 @@ class RabiFlop(EnvExperiment):
             return A * np.cos(omega * t + phi) + offset
 
         p0 = [2 * np.pi * 50e3, 0, 20, 20]
-        bounds = ([0, -np.pi, 0, 0], [2*np.pi*200e3, np.pi, 40, 40])
+        bounds = ([0, -np.pi, 0, 0],
+                  [2 * np.pi * 200e3, np.pi, 40, 40])
         popt, pcov = curve_fit(rabi_model, t, data, p0=p0,
                             bounds=bounds, maxfev=10000)
 
