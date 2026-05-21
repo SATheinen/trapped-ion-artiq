@@ -6,7 +6,6 @@ from system.modules.detection import DetectionModule
 from system.services.cooling import CoolingService
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import find_peaks
 
 class SidebandCooling(EnvExperiment):
 
@@ -41,11 +40,11 @@ class SidebandCooling(EnvExperiment):
         self.max_freq = float(self.max_freq)
         self.min_freq = float(self.min_freq)
         self.measure_duration = float(self.measure_duration)
+        self.probe_duration = float(self.probe_duration)
 
         self.freq_scan = np.linspace(self.min_freq, self.max_freq, self.n_points)
         self.set_dataset("freq", self.freq_scan, broadcast=True)
-        self.set_dataset("counts", np.zeros(self.n_points), broadcast=True)
-        self.set_dataset("p_excited", np.zeros(self.n_shots), broadcast=True)
+        self.set_dataset("p_excited", np.zeros(self.n_points), broadcast=True)
         self._counts = np.zeros((self.n_points, self.n_shots))
     
     def init_device(self):
@@ -61,7 +60,7 @@ class SidebandCooling(EnvExperiment):
             for shot in range(self.n_shots):
                 self._counts[i, shot] = self.run_point(i)
 
-            self.mutate_dataset("counts", i, self._counts[i, :].mean(axis=-1))
+        self.set_dataset("counts_2d", self._counts, broadcast=True)
                 
     @kernel
     def run_point(self, index):
@@ -76,11 +75,12 @@ class SidebandCooling(EnvExperiment):
 
     def analyze(self):
         freq = self.get_dataset("freq")
-        counts = self.get_dataset("counts")
+        counts_2d =   self.get_dataset("counts_2d")
 
         # threshold discrimination
         threshold = (40.0 + 0.5) / 2 * self.measure_duration * 1e3
-        p_excited = (self._counts < threshold).mean(axis=1)
+        self.set_dataset("p_excited", (counts_2d < threshold).mean(axis=1))
+        p_excited = self.get_dataset("p_excited")
 
         # find peaks near -omega_m, 0, +omega_m
         omega_m = self.secular_freq
@@ -127,7 +127,7 @@ class SidebandCooling(EnvExperiment):
         ax.plot(
             freq / 1e6, p_excited,
             marker="o", ms=2.8, mfc=DATA_COLOR, mec="none", lw=0,
-            alpha=0.65, label="counts",
+            alpha=0.65, label=f"data ({self.n_shots} shots/point)",
         )
 
         for f0, A in [(-omega_m_hz, A_rsb), (0.0, A_car), (+omega_m_hz, A_bsb)]:
@@ -135,14 +135,15 @@ class SidebandCooling(EnvExperiment):
                     color=PEAK_COLOR, ms=9, mec="white", mew=0.8)
 
         ax.set_xlabel(r"Detuning $\delta/2\pi$  (MHz)")
-        ax.set_ylabel("Photon counts")
+        ax.set_ylabel(r"$P(|1\rangle)$")
         ax.set_xlim(freq.min() / 1e6, freq.max() / 1e6)
+        ax.set_ylim(-0.03, 1.10)
         ax.grid(True, alpha=0.25, linestyle=":")
 
         info = (
-            f"$A_\\mathrm{{car}} = {A_car:.1f}$\n"
-            f"$A_\\mathrm{{RSB}} = {A_rsb:.1f}$\n"
-            f"$A_\\mathrm{{BSB}} = {A_bsb:.1f}$\n"
+            f"$P_\\mathrm{{car}} = {A_car:.2f}$\n"
+            f"$P_\\mathrm{{RSB}} = {A_rsb:.2f}$\n"
+            f"$P_\\mathrm{{BSB}} = {A_bsb:.2f}$\n"
             f"$\\bar n = {n_bar:.2f}$"
         )
         ax.text(
