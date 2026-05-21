@@ -61,7 +61,6 @@ class IonChain:
             return int(np.random.poisson(self.N_BRIGHT * duration * 1e3))
 
     def apply_pulse(self, duration: float, detuning_rad: float, phi: float) -> None:
-        Omega = self.omega_rabi
         delta = detuning_rad
 
         # distance from resonance
@@ -90,8 +89,8 @@ class IonChain:
         half = Omega_eff * duration / 2
         c, s = np.cos(half), np.sin(half)
 
-        nx_xy = Omega/Omega_eff
-        nz = delta/Omega_eff
+        nx_xy = eff_rabi/Omega_eff
+        nz = residual/Omega_eff
 
         U = np.array([
             [c - 1j*nz*s,                        -1j*nx_xy*np.exp(-1j*phi)*s],
