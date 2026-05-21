@@ -56,7 +56,7 @@ class SidebandCooling(EnvExperiment):
             for i in range(10):
                 self.cooling.sideband_cool(n_cycles=int(self.n_cooling_steps / 10),
                                             duration=pi_pulse_duration(n=(20 -2*i)))
-            print(f"shot:{shot}, n:{ion.n_bar}")
+            print(f"shot:{shot}, n:{ion.n_bar}.4f")
 
             if shot % 2 == 0:
                 self._rsb_counts.append(self.measure(RESONANCE_HZ - SECULAR_FREQ / (2 * np.pi)))
