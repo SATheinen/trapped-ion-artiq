@@ -44,6 +44,7 @@ class SidebandCooling(EnvExperiment):
 
         self.freq_scan = np.linspace(self.min_freq, self.max_freq, self.n_points)
         self.set_dataset("freq", self.freq_scan, broadcast=True)
+        self.set_dataset("counts", np.zeros(self.n_points), broadcast=True)
         self.set_dataset("p_excited", np.zeros(self.n_shots), broadcast=True)
         self._counts = np.zeros((self.n_points, self.n_shots))
     
@@ -59,6 +60,8 @@ class SidebandCooling(EnvExperiment):
         for i in range(self.n_points):
             for shot in range(self.n_shots):
                 self._counts[i, shot] = self.run_point(i)
+
+            self.mutate_dataset("counts", self._counts[i, :].mean(axis=-1))
                 
     @kernel
     def run_point(self, index):
