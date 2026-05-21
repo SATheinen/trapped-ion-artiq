@@ -4,7 +4,7 @@ from system.modules.laser_729 import Laser729Module
 from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.modules.detection import DetectionModule
 from system.services.cooling import CoolingService
-from config import RESONANCE_HZ, SECULAR_FREQ
+from config import RESONANCE_HZ, SECULAR_FREQ, N_DARK, N_BRIGHT, ETA, OMEGA_RABI
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -33,7 +33,10 @@ class SidebandCooling(EnvExperiment):
         self.n_cooling_steps = int(self.n_cooling_steps)
         self.measure_duration = float(self.measure_duration)
 
-        self._counts = np.zeros(self.n_shots)
+        self.bsb_pi_time = np.pi / (ETA * OMEGA_RABI)
+
+        self._rsb_counts = []
+        self._bsb_counts = []
 
     def init_device(self):
         self.laser_729.set_frequency(RESONANCE_HZ - SECULAR_FREQ / (2 * np.pi))
@@ -46,21 +49,49 @@ class SidebandCooling(EnvExperiment):
         for shot in range(self.n_shots):
             self.cooling.doppler_cool()
             self.cooling.sideband_cool(n_cycles=self.n_cooling_steps)
-            self._counts[shot] = self.measure()
 
-        self.set_dataset("counts", self._counts, broadcast=True)
+            if shot % 2 == 0:
+                self._rsb_counts.append(self.measure(RESONANCE_HZ - SECULAR_FREQ / (2 * np.pi)))
+            else:
+                self._bsb_counts.append(self.measure(RESONANCE_HZ + SECULAR_FREQ / (2 * np.pi)))
+
+        self.set_dataset("rsb_counts", np.array(self._rsb_counts), broadcast=True)
+        self.set_dataset("bsb_counts", np.array(self._bsb_counts), broadcast=True)
 
     @kernel
-    def measure(self):
-        self.laser_729.set_frequency(RESONANCE_HZ + SECULAR_FREQ / (2 * np.pi))
-        self.laser_729.pulse(5e-6)
+    def measure(self, frequency):
+        self.laser_729.set_frequency(frequency)
+        self.laser_729.pulse(self.bsb_pi_time)
         return self.detection.count(ion_index=0, duration=self.measure_duration)
 
     def analyze(self):
-        counts = self.get_dataset("counts")
-        shots = np.arange(self.n_shots)
-        mean_counts = float(np.mean(counts))
-        std_counts = float(np.std(counts))
+        rsb_counts = self.get_dataset("rsb_counts")
+        bsb_counts = self.get_dataset("bsb_counts")
+        n_rsb = len(rsb_counts)
+        n_bsb = len(bsb_counts)
+
+        threshold = (N_BRIGHT + N_DARK) / 2 * self.measure_duration * 1e3
+        p_rsb = float((rsb_counts < threshold).mean())
+        p_bsb = float((bsb_counts < threshold).mean())
+        p_rsb_err = np.sqrt(p_rsb * (1 - p_rsb) / max(n_rsb, 1))
+        p_bsb_err = np.sqrt(p_bsb * (1 - p_bsb) / max(n_bsb, 1))
+
+        if p_bsb > p_rsb and p_bsb > 0:
+            R = p_rsb / p_bsb
+            n_bar = R / (1 - R)
+            dR_dprsb = 1 / p_bsb
+            dR_dpbsb = -p_rsb / p_bsb**2
+            R_err = np.sqrt((dR_dprsb * p_rsb_err)**2 + (dR_dpbsb * p_bsb_err)**2)
+            n_bar_err = R_err / (1 - R)**2
+            n_bar_label = f"$\\bar n = {n_bar:.2f} \\pm {n_bar_err:.2f}$"
+        else:
+            n_bar = float("nan")
+            n_bar_label = r"$\bar n$ undefined ($P_\mathrm{RSB} \geq P_\mathrm{BSB}$)"
+
+        print(f"P_RSB = {p_rsb:.3f} ± {p_rsb_err:.3f}")
+        print(f"P_BSB = {p_bsb:.3f} ± {p_bsb_err:.3f}")
+        print(f"n_bar = {n_bar:.3f}")
+        self.set_dataset("calibration.n_bar", n_bar, persist=True)
 
         plt.rcParams.update({
             "font.family": "DejaVu Sans",
@@ -72,40 +103,48 @@ class SidebandCooling(EnvExperiment):
             "ytick.direction": "in",
         })
 
-        DATA_COLOR = "#2b6cb0"
-        REF_COLOR  = "#c53030"
+        RSB_COLOR = "#2b6cb0"
+        BSB_COLOR = "#2f855a"
+        REF_COLOR = "#c53030"
 
-        fig, ax = plt.subplots(figsize=(8.5, 4.8))
+        all_counts = np.concatenate([rsb_counts, bsb_counts])
+        max_count = int(all_counts.max()) + 2
+        bins = np.arange(0, max_count + 2) - 0.5
 
-        ax.axhline(mean_counts, color=REF_COLOR, lw=0.8, ls="--", alpha=0.6)
-        ax.text(1.0, mean_counts, r"$\langle N \rangle$", color=REF_COLOR,
-                ha="left", va="center", fontsize=9,
-                transform=ax.get_yaxis_transform())
+        fig, (ax_rsb, ax_bsb) = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
-        ax.plot(
-            shots, counts,
-            marker="o", ms=3.2, mfc=DATA_COLOR, mec="none", lw=0,
-            alpha=0.65, label=f"counts (after {self.n_cooling_steps} cycles)",
+        for ax, counts, p, p_err, color, label in [
+            (ax_rsb, rsb_counts, p_rsb, p_rsb_err, RSB_COLOR, "RSB"),
+            (ax_bsb, bsb_counts, p_bsb, p_bsb_err, BSB_COLOR, "BSB"),
+        ]:
+            ax.hist(counts, bins=bins, color=color, alpha=0.7, edgecolor="none")
+            ax.axvline(threshold, color=REF_COLOR, lw=0.8, ls="--", alpha=0.6)
+            ax.text(threshold, 1.02, "threshold", color=REF_COLOR,
+                    ha="center", va="bottom", fontsize=9,
+                    transform=ax.get_xaxis_transform())
+            ax.set_xlabel("Photon counts")
+            ax.set_xlim(-0.5, max_count + 0.5)
+            ax.grid(True, alpha=0.25, linestyle=":")
+            info = (
+                f"$P_\\mathrm{{{label}}} = {p:.3f} \\pm {p_err:.3f}$\n"
+                f"$N = {len(counts)}$ shots"
+            )
+            ax.text(
+                0.985, 0.96, info, transform=ax.transAxes,
+                ha="right", va="top", fontsize=10,
+                bbox=dict(boxstyle="round,pad=0.4",
+                          facecolor="white", edgecolor="#bbb", alpha=0.92),
+            )
+            ax.set_title(label, loc="left", fontsize=12, pad=8, color=color)
+
+        ax_rsb.set_ylabel("Occurrences")
+
+        fig.suptitle(
+            f"Sideband thermometry after {self.n_cooling_steps} cooling cycles    "
+            + n_bar_label,
+            x=0.02, ha="left", fontsize=13,
         )
 
-        ax.set_xlabel("Shot")
-        ax.set_ylabel("Photon counts")
-        ax.set_xlim(shots.min(), shots.max())
-        ax.grid(True, alpha=0.25, linestyle=":")
-
-        info = (
-            f"$\\langle N \\rangle = {mean_counts:.2f}$\n"
-            f"$\\sigma_N = {std_counts:.2f}$"
-        )
-        ax.text(
-            0.985, 0.96, info, transform=ax.transAxes,
-            ha="right", va="top", fontsize=10,
-            bbox=dict(boxstyle="round,pad=0.4",
-                      facecolor="white", edgecolor="#bbb", alpha=0.92),
-        )
-        ax.legend(loc="lower right", framealpha=0.9, fontsize=9)
-        ax.set_title("Sideband cooling", loc="left", fontsize=13, pad=10)
-
-        fig.tight_layout()
+        fig.tight_layout(rect=[0, 0, 1, 0.94])
         fig.savefig("sideband_cooling.pdf", bbox_inches="tight")
         plt.close(fig)
