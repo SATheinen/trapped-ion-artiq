@@ -53,6 +53,7 @@ class SidebandCooling(EnvExperiment):
     @kernel
     def measure(self):
         self.laser_729.set_frequency(RESONANCE_HZ + SECULAR_FREQ / (2 * np.pi))
+        self.laser_729.pulse(5e-6)
         return self.detection.count(ion_index=0, duration=self.measure_duration)
 
     def analyze(self):
