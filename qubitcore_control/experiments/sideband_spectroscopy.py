@@ -14,7 +14,7 @@ class SidebandCooling(EnvExperiment):
         self.setattr_argument("RESONANCE_HZ", NumberValue(default=200e6, unit='Hz'))
         self.setattr_argument("secular_freq", NumberValue(default=2*np.pi*1e6))
         self.setattr_argument("n_points", NumberValue(default=1000))
-        self.setattr_argument("n_shots", NumberValue(default=100))
+        self.setattr_argument("n_shots", NumberValue(default=1000))
         self.setattr_argument("max_freq", NumberValue(default=3e6, unit='Hz'))
         self.setattr_argument("min_freq", NumberValue(default=-3e6, unit='Hz'))
         self.setattr_argument("measure_duration", NumberValue(default=1e-3, unit='s'))
@@ -79,7 +79,7 @@ class SidebandCooling(EnvExperiment):
 
         # threshold discrimination
         threshold = (40.0 + 0.5) / 2 * self.measure_duration * 1e3
-        self.set_dataset("p_excited", (counts_2d < threshold).mean(axis=1))
+        self.set_dataset("p_excited", (counts_2d < threshold).mean(axis=1), broadcast=True)
         p_excited = self.get_dataset("p_excited")
 
         # find peaks near -omega_m, 0, +omega_m
@@ -88,15 +88,11 @@ class SidebandCooling(EnvExperiment):
             mask = (freq > f0-window) & (freq < f0+window)
             return p_excited[mask].max()
         
-        A_rsb = find_peak(-omega_m/(2*np.pi))
-        A_bsb = find_peak(+omega_m/(2*np.pi))
-        A_car = find_peak(0)
+        P_rsb = find_peak(-omega_m/(2*np.pi))
+        P_bsb = find_peak(+omega_m/(2*np.pi))
+        P_car = find_peak(0)
 
-        # thermometry: A_rsb / A_bsb = n / (n+1)
-        ratio = A_rsb / A_bsb
-        n_bar = ratio / (1 - ratio)
-        print(f"Carrier: {A_car:.3f}, RSB: {A_rsb:.3f}, BSB: {A_bsb:.3f}")
-        print(f"Estimated n_bar = {n_bar:.2f}")
+        print(f"Carrier: {P_car:.3f}, RSB: {P_rsb:.3f}, BSB: {P_bsb:.3f}")
 
         plt.rcParams.update({
             "font.family": "DejaVu Sans",
@@ -130,7 +126,7 @@ class SidebandCooling(EnvExperiment):
             alpha=0.65, label=f"data ({self.n_shots} shots/point)",
         )
 
-        for f0, A in [(-omega_m_hz, A_rsb), (0.0, A_car), (+omega_m_hz, A_bsb)]:
+        for f0, A in [(-omega_m_hz, P_rsb), (0.0, P_car), (+omega_m_hz, P_bsb)]:
             ax.plot(f0 / 1e6, A, marker="v",
                     color=PEAK_COLOR, ms=9, mec="white", mew=0.8)
 
@@ -139,21 +135,6 @@ class SidebandCooling(EnvExperiment):
         ax.set_xlim(freq.min() / 1e6, freq.max() / 1e6)
         ax.set_ylim(-0.03, 1.10)
         ax.grid(True, alpha=0.25, linestyle=":")
-
-        info = (
-            f"$P_\\mathrm{{car}} = {A_car:.2f}$\n"
-            f"$P_\\mathrm{{RSB}} = {A_rsb:.2f}$\n"
-            f"$P_\\mathrm{{BSB}} = {A_bsb:.2f}$\n"
-            f"$\\bar n = {n_bar:.2f}$"
-        )
-        ax.text(
-            0.985, 0.96, info, transform=ax.transAxes,
-            ha="right", va="top", fontsize=10,
-            bbox=dict(boxstyle="round,pad=0.4",
-                      facecolor="white", edgecolor="#bbb", alpha=0.92),
-        )
-        ax.legend(loc="lower right", framealpha=0.9, fontsize=9)
-        ax.set_title("Sideband spectroscopy", loc="left", fontsize=13, pad=10)
 
         fig.tight_layout()
         fig.savefig("sideband_cooling.pdf", bbox_inches="tight")
