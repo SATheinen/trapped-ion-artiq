@@ -30,8 +30,8 @@ class CoolingService:
     def sideband_cool(self, n_cycles: TInt32, duration: TFloat) -> TNone:
         self._laser_729.set_frequency(self.RESONANCE_HZ - self.secular_freq / (2 * np.pi))
         self.optical_pump()
-        for _ in range(n_cycles, duration):
-            self._cool_cycle()
+        for _ in range(n_cycles):
+            self._cool_cycle(duration)
 
     @kernel
     def _cool_cycle(self, duration) -> TNone:
