@@ -55,7 +55,7 @@ class SidebandCooling(EnvExperiment):
 
     @kernel
     def run_point(self, index):
-        self.cooling.pump()
+        self.cooling.optical_pump()
         self.cooling.doppler_cool()
 
         self.laser_729.set_freqeuncy(self.RESONANCE_HZ + self.freq_scan[index])
