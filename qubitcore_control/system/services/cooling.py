@@ -19,8 +19,6 @@ class CoolingService:
         self.omega_rabi = OMEGA_RABI
         self.eta = ETA
 
-        self.side_cool_duration = self.pi_pulse_duration(5)
-
     @kernel
     def doppler_cool(self) -> TNone:
         self._laser_397_cool.pulse(3*ms)
@@ -29,16 +27,13 @@ class CoolingService:
     def optical_pump(self) -> TNone:
         self._laser_397_pump.pulse(500*us)
 
-    def pi_pulse_duration(self, n):
-        return np.pi / (self.eta * self.omega_rabi * np.sqrt(n))
-
-    def sideband_cool(self, n_cycles: TInt32 = 20) -> TNone:
+    def sideband_cool(self, n_cycles: TInt32, duration: TFloat) -> TNone:
         self._laser_729.set_frequency(self.RESONANCE_HZ - self.secular_freq / (2 * np.pi))
         self.optical_pump()
-        for _ in range(n_cycles):
+        for _ in range(n_cycles, duration):
             self._cool_cycle()
 
     @kernel
-    def _cool_cycle(self) -> TNone:
-        self._laser_729.pulse(self.side_cool_duration)
+    def _cool_cycle(self, duration) -> TNone:
+        self._laser_729.pulse(duration)
         self.optical_pump()
