@@ -7,7 +7,7 @@ from system.services.cooling import CoolingService
 import numpy as np
 import matplotlib.pyplot as plt
 
-class SidebandSpectroscopy(EnvExperiment):
+class SidebandCooling(EnvExperiment):
 
     def build(self):
         self.setattr_device("core")
@@ -137,5 +137,5 @@ class SidebandSpectroscopy(EnvExperiment):
         ax.grid(True, alpha=0.25, linestyle=":")
 
         fig.tight_layout()
-        fig.savefig("sideband_spectroscopy.pdf", bbox_inches="tight")
+        fig.savefig("sideband_cooling.pdf", bbox_inches="tight")
         plt.close(fig)
