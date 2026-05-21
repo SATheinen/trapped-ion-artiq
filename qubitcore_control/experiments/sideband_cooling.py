@@ -45,10 +45,11 @@ class SidebandCooling(EnvExperiment):
     def run(self):
 
         self.init_device()
-
+        from sim.ion_chain import ion
         for shot in range(self.n_shots):
             self.cooling.doppler_cool()
             self.cooling.sideband_cool(n_cycles=self.n_cooling_steps)
+            print(f"shot:{shot}, n:{ion.n_bar}")
 
             if shot % 2 == 0:
                 self._rsb_counts.append(self.measure(RESONANCE_HZ - SECULAR_FREQ / (2 * np.pi)))
