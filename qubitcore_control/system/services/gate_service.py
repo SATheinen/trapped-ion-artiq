@@ -7,6 +7,7 @@ from config import (
 class GateService:
 
     def build(self, experiment):
+        self.core = experiment.core
         self.laser_729 = experiment.laser_729
 
         self.carrier_freq = RESONANCE_HZ                      
