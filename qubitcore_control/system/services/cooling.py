@@ -37,8 +37,8 @@ class CoolingService:
             return np.pi / (ETA * OMEGA_RABI * np.sqrt(n))
 
         for i in range(20):
-            self.cooling.sideband_cool(n_cycles=int(5),
-                                        duration=pi_pulse_duration(n=(20 -i)))
+            self.sideband_cool(n_cycles=int(5),
+                               duration=pi_pulse_duration(n=(20 - i)))
 
     @kernel
     def _cool_cycle(self, duration) -> TNone:
