@@ -58,8 +58,8 @@ class MSGate(EnvExperiment):
         self.cooling.optical_pump()
 
         # Shuttle
-        self.trap_dc.shuttle_and_recool(ion_index=0, to_z=0)
-        self.trap_dc.shuttle_and_recool(ion_index=1, to_z=0)
+        self.shuttling.shuttle_and_recool(ion_index=0, to_z=0)
+        self.shuttling.shuttle_and_recool(ion_index=1, to_z=0)
 
         # ms gate
         self.gate.apply_ms_gate()
