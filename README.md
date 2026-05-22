@@ -1,4 +1,4 @@
-# Qubitc Control
+# Qubit Control
 
 A trapped-ion quantum control stack built on [ARTIQ](https://m-labs.hk/artiq/), targeting a Ca⁺ chain. The codebase implements the full path from single-ion Rabi flopping to a two-ion Mølmer–Sørensen entangling gate, and runs end-to-end against a QuTiP-based simulator that mirrors the real ARTIQ device APIs.
 
@@ -79,20 +79,24 @@ The flake targets `x86_64-linux`. On macOS or other systems you will need either
 All experiments are standard ARTIQ `EnvExperiment` classes and run through `artiq_run` against the simulated device database:
 
 ```bash
-artiq_run --device-db qubitcore_control/device_db_sim.py \
+artiq_run --device-db qubit_control/device_db_sim.py \
           qubitcore_control/experiments/rabi_flop.py
+```
+or
+```bash
+bash start_experiment.sh
 ```
 
 Each experiment writes a dataset to HDF5 and produces a PDF plot via its `analyze()` method.
 
-To run against real hardware, populate `qubitcore_control/device_db.py` with the matching device entries. The experiment code does not change.
+To run against real hardware, populate `qubit_control/device_db.py` with the matching device entries. The experiment code does not change.
 
 ## File organization
 
 The codebase is intentionally split into four layers so that the simulator and the hardware-facing code remain isolated. Nothing under `system/` or `experiments/` imports from `sim/` — the connection is made only through the device database.
 
 ```
-qubitcore_control/
+qubit_control/
 ├── device_db.py            # real-hardware device map (empty placeholder)
 ├── device_db_sim.py        # simulator device map — points at sim/ classes
 │
@@ -130,7 +134,7 @@ qubitcore_control/
 
 The pattern that makes the rest of the codebase work is in the two device DBs. `device_db_sim.py` maps logical device names (`core`, `dds_729`, `ttl_pmt`, `dac_dc`, …) to `Sim*` classes that expose the same method signatures as their ARTIQ counterparts. `device_db.py` will eventually map the same names to real ARTIQ device entries.
 
-Because `system/modules/` and `system/services/` only ever see device handles via `self.dds`, `self.pmt`, etc., they do not know — and cannot know — whether they are talking to a simulator or to real hardware. The `@kernel` decorators are no-ops in simulation but compile to FPGA execution on real hardware, so the same source file is correct in both worlds.
+Because `system/modules/` and `system/services/` only ever see device handles via `self.dds`, `self.pmt`, etc., they do not know, whether they are talking to a simulator or to real hardware. The `@kernel` decorators are no-ops in simulation but compile to FPGA execution on real hardware, so the same source file is correct in both worlds.
 
 The simulator itself lives behind that boundary. `IonChain` holds the full QuTiP state (`N_IONS` tensor product, motional mode bookkeeping, position vector), and `SimDDS729` / `SimPMT` translate ARTIQ-level calls (`set_frequency`, `pulse`, `count`) into rotations, free evolutions, and Poisson-sampled photon counts on that state.
 
@@ -149,11 +153,9 @@ The simulator itself lives behind that boundary. `IonChain` holds the full QuTiP
 - **One shared motional mode.** The simulator assumes all ions in a zone share a single common mode and tracks `n_bar` as a scalar. Multi-mode coupling and mode crosstalk are not modeled.
 - **Phenomenological decoherence.** T₂* enters as an exponential damping factor on the off-diagonal element during free evolution rather than as a full Lindblad term integrated alongside the unitary. Good enough for Ramsey fits, not a substitute for real noise modeling.
 - **Shuttling is coarse.** Routes have a duration and a heating contribution; no waveform-level DAC simulation, no transport-induced motional excitation beyond the heating term.
-- **Services are simulator-coupled in places.** A few service-level sequences rely on simulator-specific knowledge of state to short-circuit; these need to be reviewed before running on hardware.
 
 ## Further reading
 
-- [`FLIGHT_GUIDE.md`](FLIGHT_GUIDE.md) — the long-form companion document I wrote while learning the stack. It contains the ARTIQ primer, the physics primer, and step-by-step build notes for every experiment, with solutions gated at the end.
 - [ARTIQ manual](https://m-labs.hk/artiq/manual/) — official documentation for the framework.
 - [QuTiP documentation](https://qutip.org/documentation.html) — used throughout the simulator.
 
