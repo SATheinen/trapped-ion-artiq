@@ -4,7 +4,7 @@ from system.modules.laser_729 import Laser729Module
 from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.modules.detection import DetectionModule
 from system.services.cooling import CoolingService
-from config.config import RESONANCE_HZ, OMEGA_RABI, N_BRIGHT, N_DARK, T2_STAR
+from config import RESONANCE_HZ, OMEGA_RABI, N_BRIGHT, N_DARK, T2_STAR
 from scipy.optimize import curve_fit
 import numpy as np
 import matplotlib.pyplot as plt
