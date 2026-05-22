@@ -15,6 +15,7 @@ class ShuttlingService:
         self.laser_397_cool.build(self)
         self.laser_397_pump = Laser397PumpModule()
         self.laser_397_pump.build(self)
+        self.core = self.laser_729.core
 
         self.cooling = CoolingService()
         self.cooling.build(self.laser_729, self.laser_397_cool, self.laser_397_pump)
