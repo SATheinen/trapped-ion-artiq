@@ -27,6 +27,8 @@ class TrapDCModule:
     @kernel
     def shuttle(self, ion_index: TInt32, target_zone: TInt32) -> TNone:
         current = self._positions[ion_index]
+        if current == target_zone:
+            return                          # already there — no waveform, no heating
         if not self._route_valid[current][target_zone]:
             raise ValueError("no route defined for this (from, to)")
         duration = self._route_duration[current][target_zone]
