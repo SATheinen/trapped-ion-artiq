@@ -30,7 +30,7 @@ class ShuttlingCheck(EnvExperiment):
 
         self.cooling = CoolingService()
         self.cooling.build(self.laser_729, self.laser_397_cool,
-                            self.laser_397_pump, self.detection)
+                            self.laser_397_pump)
 
         self.shuttling = ShuttlingService()
         self.shuttling.build(self.trap_dc, self.laser_729, self.cooling)
