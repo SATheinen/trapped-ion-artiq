@@ -1,10 +1,10 @@
-# Qubitcore Control
+# Qubitc Control
 
 A trapped-ion quantum control stack built on [ARTIQ](https://m-labs.hk/artiq/), targeting a Ca⁺ chain. The codebase implements the full path from single-ion Rabi flopping to a two-ion Mølmer–Sørensen entangling gate, and runs end-to-end against a QuTiP-based simulator that mirrors the real ARTIQ device APIs.
 
 ## Motivation
 
-I built this project after interviewing with **qubitcore**, who asked me to evaluate whether I could pick up ARTIQ. Rather than answer in the abstract, I used it as an opportunity to learn the framework properly: write the device wrappers, write the simulator, write the experiments, and verify each layer by reproducing standard trapped-ion benchmarks. The result is this repository — meant as concrete evidence that I can navigate ARTIQ's kernel/host split, structure a control codebase that scales beyond a single experiment, and reason about the physics the hardware is meant to drive.
+I built this project after interviewing with **qubitcore**, who asked me to evaluate whether I could pick up ARTIQ. Creating my own project seems to be the best way to learn ARTIQ alongside getting more comfortable with the underlying processes and hardware. The result is this repository, demonstrating how I can adapt to a problem fast and create immediate value in a startup.
 
 ## Demonstrated experiments
 
@@ -67,9 +67,9 @@ Two-ion entangling gate via simultaneous red/blue sideband drive detuned from th
 The project pins all dependencies (ARTIQ release-9, NumPy, SciPy, QuTiP, Matplotlib, h5py, PyYAML) through Nix, so the only prerequisite is a working Nix installation with flakes enabled.
 
 ```bash
-git clone <repo-url> qubitcore_control
-cd qubitcore_control
+git clone https://github.com/SATheinen/Artiq_test.git
 nix develop
+cd qubit_control
 ```
 
 The flake targets `x86_64-linux`. On macOS or other systems you will need either a Linux VM or to substitute the inputs in `flake.nix`. The M-Labs binary cache is configured in `nixConfig`, so the ARTIQ build should not need to compile from source.
