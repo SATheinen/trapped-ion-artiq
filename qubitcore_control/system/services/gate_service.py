@@ -21,7 +21,7 @@ class GateService:
         f_red = self.carrier_freq - self.ms_detuning
         f_blue = self.carrier_freq + self.ms_detuning
 
-        self.laser_729.set_dual_tone(f_red, f_blue,
+        self.laser_729.set_dual_mode(f_red, f_blue,
                                      self.ms_amplitude,
                                      self.ms_sum_phase)
         self.laser_729.pulse(self.ms_gate_time)
