@@ -4,14 +4,12 @@ import numpy as np
 
 from config import RESONANCE_HZ, SECULAR_FREQ, OMEGA_RABI, ETA
 
-
 class CoolingService:
 
-    def build(self, laser_729, laser_397_cool, laser_397_pump, detection):
+    def build(self, laser_729, laser_397_cool, laser_397_pump):
         self._laser_729 = laser_729
         self._laser_397_cool = laser_397_cool
         self._laser_397_pump = laser_397_pump
-        self._detection = detection
         self.core = laser_397_cool.core
 
         self.RESONANCE_HZ = RESONANCE_HZ
@@ -32,6 +30,15 @@ class CoolingService:
         self.optical_pump()
         for _ in range(n_cycles):
             self._cool_cycle(duration)
+
+    def full_automatic_sideband_cool(self):
+
+        def pi_pulse_duration(n):
+            return np.pi / (ETA * OMEGA_RABI * np.sqrt(n))
+
+        for i in range(20):
+            self.cooling.sideband_cool(n_cycles=int(5),
+                                        duration=pi_pulse_duration(n=(20 -i)))
 
     @kernel
     def _cool_cycle(self, duration) -> TNone:

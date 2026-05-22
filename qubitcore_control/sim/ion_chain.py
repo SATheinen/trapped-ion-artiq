@@ -111,5 +111,12 @@ class IonChain:
             self.n_bar = max(0.0, self.n_bar - p_excited)
         elif kind == "bsb":
             self.n_bar = self.n_bar + p_excited
+
+    def shuttle(self, ion_index, from_z, to_z, heating):
+        if self.positions[ion_index] != from_z: # check if ion is in the correct zone
+            raise ValueError(f"Ion {ion_index} is in zone {self.positions[ion_index]}, not {from_z}")
+        self.positions[ion_index] = to_z # Move ion
+        if to_z == 0:
+            self.n_bar += heating
         
 ion = IonChain()

@@ -134,3 +134,13 @@ class SimDDS397Pump():
 
         # Turn laser off
         self._t_on = None
+
+class SimDCElectrodes:
+
+    def __init__(self, dmgr):
+        self.dmgr = dmgr
+        self.ion_chain = ion
+
+    def execute_route(self, ion_index, from_zone, to_zone, duration_us, heating_mean):
+        heat_amount = int(np.random.poisson(heating_mean))
+        self.ion_chain.shuttle(ion_index, from_zone, to_zone, heating=heat_amount)

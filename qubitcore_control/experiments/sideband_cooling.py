@@ -26,7 +26,7 @@ class SidebandCooling(EnvExperiment):
         self.laser_397_pump.build(self)
 
         self.cooling = CoolingService()
-        self.cooling.build(self.laser_729, self.laser_397_cool, self.laser_397_pump, self.detection)
+        self.cooling.build(self.laser_729, self.laser_397_cool, self.laser_397_pump)
 
     def prepare(self):
         self.n_shots = int(self.n_shots)
@@ -48,7 +48,6 @@ class SidebandCooling(EnvExperiment):
             return np.pi / (ETA * OMEGA_RABI * np.sqrt(n))
 
         self.init_device()
-        from sim.ion_chain import ion
 
         for shot in range(self.n_shots):
             self.cooling.doppler_cool()
@@ -56,7 +55,6 @@ class SidebandCooling(EnvExperiment):
             for i in range(10):
                 self.cooling.sideband_cool(n_cycles=int(self.n_cooling_steps / 10),
                                             duration=pi_pulse_duration(n=(20 -2*i)))
-            print(f"shot:{shot}, n:{ion.n_bar}:.4f")
 
             if shot % 2 == 0:
                 self._rsb_counts.append(self.measure(RESONANCE_HZ - SECULAR_FREQ / (2 * np.pi)))

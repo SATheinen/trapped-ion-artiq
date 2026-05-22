@@ -33,5 +33,12 @@ device_db = {
         "module": "sim.devices",
         "class": "SimDDS397Pump",
         "arguments": {}
+    },
+
+    "dc_electrodes": {
+        "type": "local",
+        "module": "sim.devices",
+        "class": "SimDCElectrodes",
+        "arguments": {}
     }
 }
