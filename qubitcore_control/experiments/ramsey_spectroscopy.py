@@ -15,7 +15,7 @@ class RamseySpectroscopy(EnvExperiment):
         self.setattr_device("core")
         self.setattr_argument("T_min", NumberValue(default=0.0, unit='s'))
         self.setattr_argument("T_max", NumberValue(default=5e-3, unit='s'))
-        self.setattr_argument("n_points", NumberValue(default=500))
+        self.setattr_argument("n_points", NumberValue(default=200))
         self.setattr_argument("n_shots", NumberValue(default=100))
         self.setattr_argument("detuning_hz", NumberValue(default=1e3))
         self.setattr_argument("measure_duration", NumberValue(default=1e-3))
