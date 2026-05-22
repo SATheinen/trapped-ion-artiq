@@ -6,21 +6,61 @@ A trapped-ion quantum control stack built on [ARTIQ](https://m-labs.hk/artiq/), 
 
 I built this project after interviewing with **qubitcore**, who asked me to evaluate whether I could pick up ARTIQ. Rather than answer in the abstract, I used it as an opportunity to learn the framework properly: write the device wrappers, write the simulator, write the experiments, and verify each layer by reproducing standard trapped-ion benchmarks. The result is this repository — meant as concrete evidence that I can navigate ARTIQ's kernel/host split, structure a control codebase that scales beyond a single experiment, and reason about the physics the hardware is meant to drive.
 
-## What's in here
+## Demonstrated experiments
 
-A simulator-backed implementation of seven trapped-ion experiments, structured so the same experiment code runs unchanged against real hardware once a device DB is provided.
+Seven trapped-ion experiments, each runnable end-to-end against the simulator with `artiq_run`. The figure under each entry is the output of that experiment's own `analyze()` method; the full vector PDF is linked alongside.
 
-| Experiment | What it demonstrates | Plot |
-|---|---|---|
-| `fluorescence_check` | PMT counting, bright/dark discrimination, Poisson statistics | – |
-| `rabi_flop` | Carrier Rabi oscillation, fit of Ω and t_π | ![Rabi](docs/plots/rabi_flop.png) |
-| `ramsey_spectroscopy` | Free-evolution phase accumulation, T₂* decay | ![Ramsey](docs/plots/ramsey_spectroscopy.png) |
-| `sideband_spectroscopy` | Red/blue sideband structure, motional thermometry | – |
-| `sideband_cooling` | Resolved-sideband cooling, n̄ reduction | ![Sideband cooling](docs/plots/sideband_cooling.png) |
-| `shuttling` | Multi-zone ion transport, heating per route | ![Shuttling](docs/plots/shuttling.png) |
-| `ms_gate` | Two-ion Mølmer–Sørensen gate, parity scan, Bell state | ![MS gate](docs/plots/ms_gate.png) |
+### Fluorescence check — `fluorescence_check.py`
 
-Full PDFs of every plot live in [`docs/plots/`](docs/plots/).
+PMT counting with bright/dark discrimination via Poisson statistics. Used as a state-readout primitive by every other experiment. No standalone plot.
+
+### Rabi flop — `rabi_flop.py`
+
+Carrier Rabi oscillation on the qubit transition. Fits Ω_Rabi and t_π from the population-vs.-pulse-duration scan.
+
+![Rabi flop](docs/rabi_flop.png)
+
+[Full PDF →](docs/rabi_flop.pdf)
+
+### Ramsey spectroscopy — `ramsey_spectroscopy.py`
+
+Two π/2 pulses bracketing a variable free-evolution interval. Reveals coherent phase accumulation at the laser–resonance detuning and exponential T₂* decay of the fringe contrast.
+
+![Ramsey spectroscopy](docs/ramsey_spectroscopy.png)
+
+[Full PDF →](docs/ramsey_spectroscopy.pdf)
+
+### Sideband spectroscopy — `sideband_spectroscopy.py`
+
+Frequency scan across the carrier showing red and blue motional sidebands at ±ω_sec. The sideband-ratio asymmetry gives a thermometry estimate of n̄.
+
+![Sideband spectroscopy](docs/sideband_spectroscopy.png)
+
+[Full PDF →](docs/sideband_spectroscopy.pdf)
+
+### Sideband cooling — `sideband_cooling.py`
+
+Resolved-sideband cooling on the red sideband, interleaved with optical pumping. Tracks n̄ from its Doppler-cooled starting value down toward the motional ground state.
+
+![Sideband cooling](docs/sideband_cooling.png)
+
+[Full PDF →](docs/sideband_cooling.pdf)
+
+### Shuttling — `shuttling.py`
+
+Multi-zone ion transport across a segmented trap. Routes and per-route heating are driven from the YAML config in `config/`.
+
+![Shuttling](docs/shuttling.png)
+
+[Full PDF →](docs/shuttling.pdf)
+
+### Mølmer–Sørensen gate — `ms_gate.py`
+
+Two-ion entangling gate via simultaneous red/blue sideband drive detuned from the secular frequency. A parity scan over the analysis-pulse phase verifies Bell-state preparation.
+
+![MS gate](docs/ms_gate.png)
+
+[Full PDF →](docs/ms_gate.pdf)
 
 ## Installation
 
