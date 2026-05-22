@@ -1,0 +1,122 @@
+# Qubitcore Control
+
+A trapped-ion quantum control stack built on [ARTIQ](https://m-labs.hk/artiq/), targeting a Ca⁺ chain. The codebase implements the full path from single-ion Rabi flopping to a two-ion Mølmer–Sørensen entangling gate, and runs end-to-end against a QuTiP-based simulator that mirrors the real ARTIQ device APIs.
+
+## Motivation
+
+I built this project after interviewing with **qubitcore**, who asked me to evaluate whether I could pick up ARTIQ. Rather than answer in the abstract, I used it as an opportunity to learn the framework properly: write the device wrappers, write the simulator, write the experiments, and verify each layer by reproducing standard trapped-ion benchmarks. The result is this repository — meant as concrete evidence that I can navigate ARTIQ's kernel/host split, structure a control codebase that scales beyond a single experiment, and reason about the physics the hardware is meant to drive.
+
+## What's in here
+
+A simulator-backed implementation of seven trapped-ion experiments, structured so the same experiment code runs unchanged against real hardware once a device DB is provided.
+
+| Experiment | What it demonstrates | Plot |
+|---|---|---|
+| `fluorescence_check` | PMT counting, bright/dark discrimination, Poisson statistics | – |
+| `rabi_flop` | Carrier Rabi oscillation, fit of Ω and t_π | ![Rabi](docs/plots/rabi_flop.png) |
+| `ramsey_spectroscopy` | Free-evolution phase accumulation, T₂* decay | ![Ramsey](docs/plots/ramsey_spectroscopy.png) |
+| `sideband_spectroscopy` | Red/blue sideband structure, motional thermometry | – |
+| `sideband_cooling` | Resolved-sideband cooling, n̄ reduction | ![Sideband cooling](docs/plots/sideband_cooling.png) |
+| `shuttling` | Multi-zone ion transport, heating per route | ![Shuttling](docs/plots/shuttling.png) |
+| `ms_gate` | Two-ion Mølmer–Sørensen gate, parity scan, Bell state | ![MS gate](docs/plots/ms_gate.png) |
+
+Full PDFs of every plot live in [`docs/plots/`](docs/plots/).
+
+## Installation
+
+The project pins all dependencies (ARTIQ release-9, NumPy, SciPy, QuTiP, Matplotlib, h5py, PyYAML) through Nix, so the only prerequisite is a working Nix installation with flakes enabled.
+
+```bash
+git clone <repo-url> qubitcore_control
+cd qubitcore_control
+nix develop
+```
+
+The flake targets `x86_64-linux`. On macOS or other systems you will need either a Linux VM or to substitute the inputs in `flake.nix`. The M-Labs binary cache is configured in `nixConfig`, so the ARTIQ build should not need to compile from source.
+
+## Running an experiment
+
+All experiments are standard ARTIQ `EnvExperiment` classes and run through `artiq_run` against the simulated device database:
+
+```bash
+artiq_run --device-db qubitcore_control/device_db_sim.py \
+          qubitcore_control/experiments/rabi_flop.py
+```
+
+Each experiment writes a dataset to HDF5 and produces a PDF plot via its `analyze()` method.
+
+To run against real hardware, populate `qubitcore_control/device_db.py` with the matching device entries. The experiment code does not change.
+
+## File organization
+
+The codebase is intentionally split into four layers so that the simulator and the hardware-facing code remain isolated. Nothing under `system/` or `experiments/` imports from `sim/` — the connection is made only through the device database.
+
+```
+qubitcore_control/
+├── device_db.py            # real-hardware device map (empty placeholder)
+├── device_db_sim.py        # simulator device map — points at sim/ classes
+│
+├── experiments/            # top-level EnvExperiment classes
+│   ├── fluorescence_check.py
+│   ├── rabi_flop.py
+│   ├── ramsey_spectroscopy.py
+│   ├── sideband_spectroscopy.py
+│   ├── sideband_cooling.py
+│   ├── shuttling.py
+│   └── ms_gate.py
+│
+├── system/                 # hardware abstractions — run on both sim and real
+│   ├── modules/            # thin wrappers around one device each
+│   │   ├── laser_729.py    #   qubit laser (DDS)
+│   │   ├── laser_397.py    #   Doppler / detection laser
+│   │   ├── detection.py    #   PMT TTL counter
+│   │   └── trap_dc.py      #   shuttling DAC waveforms
+│   └── services/           # higher-level sequences composed from modules
+│       ├── cooling.py      #   Doppler + optical pumping
+│       ├── gate_service.py #   MS gate, dual-frequency drive
+│       └── ion_shuttling.py
+│
+├── config/                 # central physics + hardware parameters
+│   ├── __init__.py         #   constants (Ω, ω_sec, η, T₂*, etc.)
+│   └── loader.py           #   YAML-backed trap zone / route config
+│
+└── sim/                    # pure-Python simulator — never imported by system/
+    ├── core.py             #   SimCore — replaces ARTIQ core device
+    ├── devices.py          #   SimDDS729, SimPMT, SimDAC — mirror real APIs
+    └── ion_chain.py        #   QuTiP state vector, mesolve, fluorescence model
+```
+
+### The simulator / software boundary
+
+The pattern that makes the rest of the codebase work is in the two device DBs. `device_db_sim.py` maps logical device names (`core`, `dds_729`, `ttl_pmt`, `dac_dc`, …) to `Sim*` classes that expose the same method signatures as their ARTIQ counterparts. `device_db.py` will eventually map the same names to real ARTIQ device entries.
+
+Because `system/modules/` and `system/services/` only ever see device handles via `self.dds`, `self.pmt`, etc., they do not know — and cannot know — whether they are talking to a simulator or to real hardware. The `@kernel` decorators are no-ops in simulation but compile to FPGA execution on real hardware, so the same source file is correct in both worlds.
+
+The simulator itself lives behind that boundary. `IonChain` holds the full QuTiP state (`N_IONS` tensor product, motional mode bookkeeping, position vector), and `SimDDS729` / `SimPMT` translate ARTIQ-level calls (`set_frequency`, `pulse`, `count`) into rotations, free evolutions, and Poisson-sampled photon counts on that state.
+
+## Capabilities
+
+- **End-to-end ARTIQ workflow** — every experiment is launched through `artiq_run`, uses `@kernel`-decorated sequences, writes HDF5 datasets, and performs its own curve fitting and PDF rendering in `analyze()`.
+- **Sim/real parity** — switching between simulated and real hardware is a single command-line flag (`--device-db`). No experiment or system code branches on the backend.
+- **Layered control stack** — modules wrap single devices, services compose modules into reusable physics primitives (cooling, MS gate, shuttling), and experiments stay short and readable.
+- **Physically reasonable simulator** — QuTiP master-equation evolution with detuning, Rabi drive, T₂* dephasing, motional state tracking, Lamb-Dicke sideband coupling, and Poisson PMT statistics. Enough to make the fits in each experiment converge to the configured parameters.
+- **Centralized configuration** — all physics constants live in `config/`, and trap zones / shuttling routes are loaded from YAML so that experiment code stays parameter-free.
+
+## Limitations and honest caveats
+
+- **No real-hardware validation.** `device_db.py` is an empty placeholder. Every result in this repo is from the simulator. The architecture is designed for parity, but parity has not been physically demonstrated.
+- **Single-species, fixed parameters.** Only Ca⁺ at a single hard-coded set of operating parameters is modeled. There is no calibration routine — the "true" values in the simulator are also the values experiments are configured against.
+- **One shared motional mode.** The simulator assumes all ions in a zone share a single common mode and tracks `n_bar` as a scalar. Multi-mode coupling and mode crosstalk are not modeled.
+- **Phenomenological decoherence.** T₂* enters as an exponential damping factor on the off-diagonal element during free evolution rather than as a full Lindblad term integrated alongside the unitary. Good enough for Ramsey fits, not a substitute for real noise modeling.
+- **Shuttling is coarse.** Routes have a duration and a heating contribution; no waveform-level DAC simulation, no transport-induced motional excitation beyond the heating term.
+- **Services are simulator-coupled in places.** A few service-level sequences rely on simulator-specific knowledge of state to short-circuit; these need to be reviewed before running on hardware.
+
+## Further reading
+
+- [`FLIGHT_GUIDE.md`](FLIGHT_GUIDE.md) — the long-form companion document I wrote while learning the stack. It contains the ARTIQ primer, the physics primer, and step-by-step build notes for every experiment, with solutions gated at the end.
+- [ARTIQ manual](https://m-labs.hk/artiq/manual/) — official documentation for the framework.
+- [QuTiP documentation](https://qutip.org/documentation.html) — used throughout the simulator.
+
+## Contact
+
+Silas Theinen — silas.theinen@t-online.de
