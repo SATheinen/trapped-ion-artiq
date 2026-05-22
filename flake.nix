@@ -16,6 +16,7 @@
             ps.h5py
             ps.qutip
             ps.scipy
+            ps.yaml
           ]))
         ];
       };
