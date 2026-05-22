@@ -4,16 +4,18 @@ from system.modules.laser_729 import Laser729Module
 from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.modules.detection import DetectionModule
 from system.services.cooling import CoolingService
-from config import RESONANCE_HZ, OMEGA_RABI
+from config import RESONANCE_HZ, OMEGA_RABI, N_BRIGHT, N_DARK
+from scipy.optimize import curve_fit
 import numpy as np
+import matplotlib.pyplot as plt
 
 class RabiFlop(EnvExperiment):
 
     def build(self):
         self.setattr_device("core")
-        self.setattr_argument("measure_duration", NumberValue(default=1e-3))
-        self.setattr_argument("pulse_min_duration", NumberValue(default=0e-6))
-        self.setattr_argument("pulse_max_duration", NumberValue(default=50e-6))
+        self.setattr_argument("measure_duration", NumberValue(default=1e-3, unit='s'))
+        self.setattr_argument("pulse_min_duration", NumberValue(default=0e-6, unit='s'))
+        self.setattr_argument("pulse_max_duration", NumberValue(default=50e-6, unit='s'))
         self.setattr_argument("n_shots", NumberValue(default=100))
         self.setattr_argument("pulse_n_durations", NumberValue(default=100))
         self.setattr_argument("laser_frequency", NumberValue(default=RESONANCE_HZ))
@@ -40,62 +42,56 @@ class RabiFlop(EnvExperiment):
         self.laser_frequency = float(self.laser_frequency)
         self.laser_phase = float(self.laser_phase)
 
-        self.pulse_durations = np.linspace(self.pulse_min_duration, self.pulse_max_duration, self.pulse_n_durations)
-        shot_results = np.zeros(self.n_shots)
-        duration_results = np.zeros(self.pulse_n_durations)
+        self.pulse_durations = np.linspace(
+            self.pulse_min_duration, self.pulse_max_duration, self.pulse_n_durations
+        )
+        self.set_dataset("pulse_durations", self.pulse_durations, broadcast=True)
+        self.set_dataset("p_excited", np.zeros(self.pulse_n_durations), broadcast=True)
+        self.set_dataset("counts", np.zeros((self.pulse_n_durations, self.n_shots)), broadcast=True)
 
-        self.set_dataset("shot_photon_count", shot_results)
-        self.set_dataset("duration_photon_count", duration_results)
-
-    def run(self):
-        
-        # Set Laser frequency and phase
-        self.init_device()
-
-        # Motional mode cooling
-        self.cooling.doppler_cool()
-
-        for i, pulse_duration in enumerate(self.pulse_durations):
-            for shot in range(self.n_shots):
-                
-                # Reset state
-                self.cooling.optical_pump()                
-
-                # Real Hardware
-                self.pulse(pulse_duration) # Send laser pulse
-                self.measure(shot)
-
-            average_photons = np.mean(self.get_dataset("shot_photon_count")) # Average counts over shots
-            self.mutate_dataset("duration_photon_count", i, average_photons) # write to dataset
+        self._counts = np.zeros((self.pulse_n_durations, self.n_shots))
 
     def init_device(self):
         self.laser_729.set_frequency(self.laser_frequency)
         self.laser_729.set_phase(self.laser_phase)
 
-    @kernel
-    def pulse(self, duration: TFloat):
-        self.laser_729.pulse(duration)            
+    def run(self):
+        self.init_device()
+        self.cooling.doppler_cool()
+
+        for i in range(self.pulse_n_durations):
+            for shot in range(self.n_shots):
+                self.cooling.optical_pump()
+                self._counts[i, shot] = self.pulse_and_count(self.pulse_durations[i])
+
+        self.set_dataset("counts", self._counts, broadcast=True)
 
     @kernel
-    def measure(self, shot: TInt32):
-        count = self.detection.count(ion_index=0, duration=self.measure_duration)
-        self.mutate_dataset("shot_photon_count", shot, count)
+    def pulse_and_count(self, duration: TFloat) -> TInt32:
+        self.laser_729.pulse(duration)
+        return self.detection.count(ion_index=0, duration=self.measure_duration)
 
     def analyze(self):
-        import matplotlib.pyplot as plt
-        from scipy.optimize import curve_fit
-
         t = self.pulse_durations
-        data = self.get_dataset("duration_photon_count")
+        counts_2d = self.get_dataset("counts")
+
+        threshold = (N_BRIGHT + N_DARK) / 2 * self.measure_duration * 1e3
+        excited = counts_2d < threshold
+        p_excited = excited.mean(axis=1)
+        p_err = np.sqrt(p_excited * (1 - p_excited) / self.n_shots)
+        self.set_dataset("p_excited", p_excited, broadcast=True)
 
         def rabi_model(t, omega, phi, A, offset):
-            return A * np.cos(omega * t + phi) + offset
+            return A * (1 - np.cos(omega * t + phi)) / 2 + offset
 
-        p0 = [OMEGA_RABI, 0, 20, 20]
-        bounds = ([0, -np.pi, 0, 0],
-                  [2 * np.pi * 200e3, np.pi, 40, 40])
-        popt, pcov = curve_fit(rabi_model, t, data, p0=p0,
-                            bounds=bounds, maxfev=10000)
+        p0 = [OMEGA_RABI, 0.0, 1.0, 0.0]
+        bounds = ([0, -np.pi, 0, -0.1],
+                  [2 * np.pi * 200e3, np.pi, 1.2, 0.5])
+        popt, pcov = curve_fit(
+            rabi_model, t, p_excited,
+            sigma=np.clip(p_err, 1e-3, None),
+            p0=p0, bounds=bounds, maxfev=10000,
+        )
 
         omega_fit, phi_fit, A_fit, offset_fit = popt
         omega_err, phi_err, A_err, offset_err = np.sqrt(np.diag(pcov))
@@ -104,7 +100,11 @@ class RabiFlop(EnvExperiment):
         f_rabi_err = omega_err / (2 * np.pi)
         t_fine = np.linspace(t.min(), t.max(), 2000)
 
-        print(f"π-time: {t_pi*1e6:.2f} µs  |  Rabi freq: {f_rabi/1e3:.2f} kHz")
+        self.set_dataset("calibration.t_pi", t_pi, persist=True)
+        self.set_dataset("calibration.omega_rabi", omega_fit, persist=True)
+
+        print(f"  Ω/2π    = {f_rabi/1e3:7.2f} ± {f_rabi_err/1e3:.2f} kHz")
+        print(f"  t_π     = {t_pi*1e6:7.2f} µs")
 
         plt.rcParams.update({
             "font.family": "DejaVu Sans",
@@ -127,19 +127,21 @@ class RabiFlop(EnvExperiment):
                 ha="center", va="bottom", fontsize=9,
                 transform=ax.get_xaxis_transform())
 
-        ax.plot(
-            t * 1e6, data,
-            marker="o", ms=3.2, mfc=DATA_COLOR, mec="none", lw=0,
-            alpha=0.65, label=f"data ({self.n_shots} shots/point)",
+        ax.errorbar(
+            t * 1e6, p_excited, yerr=p_err,
+            fmt="o", ms=3.2, mfc=DATA_COLOR, mec="none",
+            ecolor=DATA_COLOR, elinewidth=0.5, alpha=0.65, capsize=0,
+            label=f"data ({self.n_shots} shots/point)",
         )
         ax.plot(
             t_fine * 1e6, rabi_model(t_fine, *popt),
             color=FIT_COLOR, lw=1.7, label="fit",
         )
 
-        ax.set_xlabel(r"Pulse duration  $t$  (µs)")
-        ax.set_ylabel("Photon counts")
+        ax.set_xlabel(r"Pulse duration  $t$  ($\mu$s)")
+        ax.set_ylabel(r"$P(|1\rangle)$")
         ax.set_xlim(t.min() * 1e6, t.max() * 1e6)
+        ax.set_ylim(-0.03, 1.10)
         ax.grid(True, alpha=0.25, linestyle=":")
 
         info = (
