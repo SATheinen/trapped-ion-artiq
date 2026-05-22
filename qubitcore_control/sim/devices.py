@@ -20,7 +20,7 @@ class SimDDS729():
         self.time_manager = time_manager
 
         self.frequency = None
-        self.phase = None
+        self.phase = 0.0
 
         self._t_on = None
         self.sw = SimDDS729.Switch(self)
@@ -73,7 +73,7 @@ class SimDDS397Cool():
         self.ion = ion
 
         self.frequency = None
-        self.phase = None
+        self.phase = 0.0
 
         self._t_on = None
         self.sw = SimDDS729.Switch(self)
@@ -92,10 +92,10 @@ class SimDDS397Cool():
         # Check if laser was turned on before
         if self._t_on == None:
             return
-        
+
         # Get pulse duration
         duration = time_manager.current_time() - self._t_on
-        
+
         # 397 laser depopulates the motional modes
         if np.any(self.ion.positions == 0):
             self.ion.n_bar = self.ion.n_eq + (self.ion.n_bar - self.ion.n_eq) * np.exp(-2000 * duration)
@@ -110,7 +110,7 @@ class SimDDS397Pump():
         self.ion = ion
 
         self.frequency = None
-        self.phase = None
+        self.phase = 0.0
 
         self._t_on = None
         self.sw = SimDDS729.Switch(self)
@@ -129,7 +129,7 @@ class SimDDS397Pump():
         # Check if laser was turned on before
         if self._t_on == None:
             return
-        
+
         self.ion.reset_to_ground()
 
         # Turn laser off
