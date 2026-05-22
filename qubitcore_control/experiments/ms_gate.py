@@ -15,7 +15,7 @@ class MSGate(EnvExperiment):
 
     def build(self):
         self.setattr_device("core")
-        self.setattr_argument("n_shots", NumberValue(default=100))
+        self.setattr_argument("n_shots", NumberValue(default=300))
         self.setattr_argument("measure_duration", NumberValue(default=1e-3))
 
         self.laser_729 = Laser729Module()    
