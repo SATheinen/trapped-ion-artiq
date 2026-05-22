@@ -10,6 +10,9 @@ class Laser729Module():
     def set_frequency(self, frequency):
         self._dds_729.set_frequency(frequency)
 
+    def set_dual_mode(self, f_red, f_blue, amplitude, sum_phase):
+        self._dds_729.set_dual_tone(f_red, f_blue, amplitude, sum_phase)
+
     def set_phase(self, phi):
         self._dds_729.set_phase(phi)
     

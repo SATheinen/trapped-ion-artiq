@@ -18,6 +18,7 @@ class SimDDS729():
         self.device_mgr = device_mgr # Ignore
         self.ion = ion
         self.time_manager = time_manager
+        self._mode = "single"
 
         self.frequency = None
         self.phase = 0.0
@@ -26,11 +27,17 @@ class SimDDS729():
         self.sw = SimDDS729.Switch(self)
 
     def set_frequency(self, frequency: TFloat) -> TNone:
+        self._mode = "single"
         self.frequency = frequency
         self.ion.laser_freq = frequency
 
     def set_phase(self, phi: TFloat) -> TNone:
         self.phase = phi
+
+    def set_dual_tone(self, f_red, f_blue, amplitude, sum_phase):
+        self._mode = "dual"
+        self._dual_phase = sum_phase
+        # f_red, f_blue and amplitude are only necessary for real Hardware
 
     def _begin_pulse(self):
         # Turn laser on
@@ -47,7 +54,10 @@ class SimDDS729():
         # Calculate detuning
         detuning_rad = 2 * np.pi * (self.frequency - self.ion.RESONANCE_HZ)
 
-        self.ion.apply_pulse(duration, detuning_rad, self.phase)
+        if self._mode == "single":
+            self.ion.apply_pulse(duration, detuning_rad, self.phase)
+        if self._mode == "dual":
+            self.ion.apply_ms_gate(duration)
 
         # Turn laser off
         self._t_on = None

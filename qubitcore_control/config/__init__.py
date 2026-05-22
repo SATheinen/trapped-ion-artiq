@@ -1,12 +1,7 @@
 """Central configuration: physics constants and default calibration values.
 
 Both the simulator (sim/ion_chain.py) and the experiments/services import from
-here so values stay consistent. NumberValue defaults reference these constants
-so the GUI still exposes them as per-run overrides.
-
-When calibration experiments produce fitted values, write them to persistent
-ARTIQ datasets (e.g. `calibration.omega_rabi`) and prefer those at runtime
-over the defaults defined here.
+here so values stay consistent.
 """
 import numpy as np
 
@@ -15,6 +10,12 @@ RESONANCE_HZ = 200e6              # carrier frequency (Hz)
 OMEGA_RABI   = 2 * np.pi * 50e3   # carrier Rabi frequency (rad/s)
 ETA          = 0.1                # Lamb-Dicke parameter
 T2_STAR      = 1e-3               # dephasing time (s)
+
+# MS Gate
+MS_LOOPS = 1
+MS_GATE_TIME = np.pi / (ETA * OMEGA_RABI) * np.sqrt(MS_LOOPS / 2)
+MS_SUM_PHASE = 0
+MS_AMPLITUDE = 0.5
 
 # Motional mode
 SECULAR_FREQ  = 2 * np.pi * 1e6   # axial secular frequency (rad/s)
@@ -27,3 +28,4 @@ N_DARK   = 0.5
 
 # Ion chain
 N_IONS = 3
+INITIAL_POSITIONS = [0, 1, 2]

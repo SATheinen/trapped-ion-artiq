@@ -1,18 +1,20 @@
 import numpy as np
+import qutip as qt
+
 from config import (
     N_IONS, N_BAR_INITIAL, N_BAR_DOPPLER,
     N_BRIGHT, N_DARK,
-    OMEGA_RABI, RESONANCE_HZ, SECULAR_FREQ, ETA, T2_STAR,
+    OMEGA_RABI, RESONANCE_HZ, SECULAR_FREQ, ETA, T2_STAR, MS_GATE_TIME, INITIAL_POSITIONS
 )
 
 class IonChain:
 
     def __init__(self):
         self.N_IONS = N_IONS
-        self.states = np.array([np.array([1+0j, 0+0j]) for _ in range(self.N_IONS)]) # alpha and beta coefficients of every qbit
+        self.psi = qt.tensor([qt.basis(2, 0)] * self.N_IONS) # initialize psi for N_IONS in groundstate
         self.n_bar = N_BAR_INITIAL # Phonon motional mode, assuming all zones share one mode (Simplification of reality)
         self.n_eq = N_BAR_DOPPLER # laser 397 driven equilibrium motional modes
-        self.positions = np.array([0, 0, 1]) # Zone each ion is residing in
+        self.positions = np.array(INITIAL_POSITIONS) # Zone each ion is residing in
 
         self.N_BRIGHT = N_BRIGHT # count / ms
         self.N_DARK = N_DARK # count / ms
@@ -25,45 +27,51 @@ class IonChain:
         self.laser_state = "off" # Check if any laser is currently on, required for free_evolution
         self.laser_freq = self.RESONANCE_HZ # get laser frequency to calculate detuning
 
+    def _single_ion_op(self, op, ion_index):
+        ops = [qt.qeye(2)] * self.N_IONS
+        ops[ion_index] = op
+        return qt.tensor(ops)
+
     def current_detuning_rad(self):
         return 2 * np.pi * (self.laser_freq - self.RESONANCE_HZ)
 
     def reset_to_ground(self) -> None:
-        for i in range(self.N_IONS):
-            self.states[i, :] = np.array([1+0j, 0+0j])
+        self.psi = qt.tensor([qt.basis(2, 0)] * self.N_IONS)
 
     def apply_rotation(self, ion_index: int, theta: float, phi: float) -> None:
         c, s = np.cos(theta/2), np.sin(theta/2)
 
-        rotation_matrix = np.array([
+        R = qt.Qobj([
             [c,                       -1j*np.exp(-1j*phi)*s],
             [-1j*np.exp(1j*phi)*s,    c                    ],
         ])
+        U = self._single_ion_op(R, ion_index)
         # apply rotation
-        self.states[ion_index, :] = rotation_matrix @ self.states[ion_index, :]
+        self.psi = U * self.psi
 
     def free_evolve(self, ion_index, detuning_rad, duration):
-        alpha, beta = self.states[ion_index, :]
-        beta = beta * np.exp(1j * detuning_rad * duration)
+        damp = np.exp(-duration / self.T2_star)              # ✓ real, dimensionless damping
+        D = qt.Qobj([
+            [1, 0],
+            [0, damp * np.exp(1j * detuning_rad * duration)] # phase applied once
+        ])
 
-        # T2* dephasing on the coherence:
-        damp = np.exp(-duration / (self.T2_star))
-        beta = beta * damp
-
-        self.states[ion_index, :] = np.array([alpha, beta])
+        U = self._single_ion_op(D, ion_index)
+        self.psi = U * self.psi
 
     def sample_fluorescence(self, ion_index: int, duration: float) -> int:
-        p_excited = np.abs(self.states[ion_index, 1])**2
+        rho_i = self.psi.ptrace(ion_index)
+        p_excited = float(rho_i[1, 1].real)
 
-        random_num = np.random.rand()
-        if random_num < p_excited:
-            # collapse to |1>
-            self.states[ion_index, :] = np.array([0+0j, 1+0j])
-            return int(np.random.poisson(self.N_DARK * duration * 1e3))
-        else:
-            # collapse to |0>
-            self.states[ion_index, :] = np.array([1+0j, 0+0j])
-            return int(np.random.poisson(self.N_BRIGHT * duration * 1e3))
+        outcome = 1 if np.random.rand() < p_excited else 0
+
+        ket_b = qt.basis(2, outcome)
+        proj = ket_b * ket_b.dag()
+        P_full = self._single_ion_op(proj, ion_index)
+        self.psi = (P_full * self.psi).unit()
+
+        rate = self.N_DARK if outcome == 1 else self.N_BRIGHT
+        return int(np.random.poisson(rate * duration * 1e3))
 
     def apply_pulse(self, duration: float, detuning_rad: float, phi: float) -> None:
         delta = detuning_rad
@@ -102,15 +110,35 @@ class IonChain:
             [-1j*nx_xy*np.exp(1j*phi)*s,          c + 1j*nz*s               ],
         ])
 
-        for i in range(self.N_IONS):
-            if self.positions[i] == 0: # Only act on active zone
-                self.states[i, :] = U @ self.states[i, :]
+        U_qobj = qt.Qobj(U)
+        ops = [U_qobj if self.positions[i] == 0 else qt.qeye(2) for i in range(self.N_IONS)]
+        U_full = qt.tensor(ops)
+        self.psi = U_full * self.psi
 
         # phonon bookkeeping (approximate)
         if kind == "rsb":
             self.n_bar = max(0.0, self.n_bar - p_excited)
         elif kind == "bsb":
             self.n_bar = self.n_bar + p_excited
+
+    def apply_ms_gate(self, duration):
+        if np.sum(self.positions==0) != 2:
+            raise ValueError(f"MS gate requires exactly two ions in zone 0")
+        if self.n_bar > 0.1:
+          print(f"WARNING: MS gate with n_bar={self.n_bar:.2f}, fidelity will degrade.")
+ 
+        chi = np.pi / 4 * (duration / MS_GATE_TIME)
+
+        zone0 = np.where(self.positions == 0)[0]
+        ion_a, ion_b = int(zone0[0]), int(zone0[1])
+
+        ops = [qt.qeye(2)] * self.N_IONS
+        ops[ion_a] = qt.sigmax()
+        ops[ion_b] = qt.sigmax()
+        Sxx_full = qt.tensor(ops)
+
+        U_ms = (-1j * chi * Sxx_full).expm()
+        self.psi = U_ms * self.psi
 
     def shuttle(self, ion_index, from_z, to_z, heating):
         if self.positions[ion_index] != from_z: # check if ion is in the correct zone

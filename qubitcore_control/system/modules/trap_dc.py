@@ -1,6 +1,8 @@
 from artiq.experiment import kernel, delay, us
 from artiq.language import TFloat, TNone, TInt32
 from config.loader import load_trap_config
+from config import INITIAL_POSITIONS
+import numpy as np
 
 class TrapDCModule:
 
@@ -19,7 +21,7 @@ class TrapDCModule:
               self._route_heating[a][b]  = r.heating.mean
               self._route_valid[a][b]    = True
 
-          self._positions = [0, 0, 1]
+          self._positions = np.array(INITIAL_POSITIONS)
           self.interaction_zone = cfg.interaction_zone
 
     @kernel
