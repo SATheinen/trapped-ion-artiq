@@ -2,7 +2,7 @@ from artiq.experiment import kernel, delay, ms, us
 from artiq.language.types import TInt32, TFloat, TNone
 import numpy as np
 
-from config import RESONANCE_HZ, SECULAR_FREQ, OMEGA_RABI, ETA
+from config.config import RESONANCE_HZ, SECULAR_FREQ, OMEGA_RABI, ETA
 
 class CoolingService:
 

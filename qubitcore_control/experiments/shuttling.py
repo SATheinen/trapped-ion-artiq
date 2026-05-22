@@ -6,7 +6,7 @@ from system.modules.detection import DetectionModule
 from system.modules.trap_dc import TrapDCModule
 from system.services.cooling import CoolingService
 from system.services.ion_shuttling import ShuttlingService
-from config import RESONANCE_HZ, SECULAR_FREQ, N_DARK, N_BRIGHT, ETA, OMEGA_RABI
+from config.config import RESONANCE_HZ, SECULAR_FREQ, N_DARK, N_BRIGHT, ETA, OMEGA_RABI
 import numpy as np
 import matplotlib.pyplot as plt
 
