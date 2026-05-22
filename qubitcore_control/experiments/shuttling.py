@@ -49,8 +49,14 @@ class ShuttlingCheck(EnvExperiment):
           broadcast=True,
       )
 
+    def init_device(self):
+        self.laser_729.set_phase(0)
+
     @kernel
     def run(self):
+
+        self.init_device()
+        
         for shot in range(self.n_shots):
             sideband = shot % 2
             pair_idx = shot // 2
