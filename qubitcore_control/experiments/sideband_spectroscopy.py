@@ -105,9 +105,9 @@ class SidebandSpectroscopy(EnvExperiment):
             "ytick.direction": "in",
         })
 
-        DATA_COLOR = "#2b6cb0"
-        REF_COLOR  = "#c53030"
-        PEAK_COLOR = "#2f855a"
+        DATA_COLOR   = "#2b6cb0"
+        FIT_COLOR    = "#c53030"
+        ACCENT_COLOR = "#2f855a"
 
         omega_m_hz = omega_m / (2 * np.pi)
 
@@ -116,8 +116,8 @@ class SidebandSpectroscopy(EnvExperiment):
         for f0, label in [(-omega_m_hz, r"$-\omega_m$"),
                           (0.0,          r"$\omega_0$"),
                           (+omega_m_hz, r"$+\omega_m$")]:
-            ax.axvline(f0 / 1e6, color=REF_COLOR, lw=0.8, ls="--", alpha=0.5)
-            ax.text(f0 / 1e6, 1.02, label, color=REF_COLOR,
+            ax.axvline(f0 / 1e6, color=FIT_COLOR, lw=0.8, ls="--", alpha=0.5)
+            ax.text(f0 / 1e6, 1.02, label, color=FIT_COLOR,
                     ha="center", va="bottom", fontsize=9,
                     transform=ax.get_xaxis_transform())
 
@@ -129,13 +129,28 @@ class SidebandSpectroscopy(EnvExperiment):
 
         for f0, A in [(-omega_m_hz, P_rsb), (0.0, P_car), (+omega_m_hz, P_bsb)]:
             ax.plot(f0 / 1e6, A, marker="v",
-                    color=PEAK_COLOR, ms=9, mec="white", mew=0.8)
+                    color=ACCENT_COLOR, ms=9, mec="white", mew=0.8,
+                    label="peak" if f0 == 0.0 else None)
 
         ax.set_xlabel(r"Detuning $\delta/2\pi$  (MHz)")
         ax.set_ylabel(r"$P(|1\rangle)$")
         ax.set_xlim(freq.min() / 1e6, freq.max() / 1e6)
         ax.set_ylim(-0.03, 1.10)
         ax.grid(True, alpha=0.25, linestyle=":")
+
+        info = (
+            f"$P_\\mathrm{{car}} = {P_car:.3f}$\n"
+            f"$P_\\mathrm{{RSB}} = {P_rsb:.3f}$\n"
+            f"$P_\\mathrm{{BSB}} = {P_bsb:.3f}$"
+        )
+        ax.text(
+            0.985, 0.96, info, transform=ax.transAxes,
+            ha="right", va="top", fontsize=10,
+            bbox=dict(boxstyle="round,pad=0.4",
+                      facecolor="white", edgecolor="#bbb", alpha=0.92),
+        )
+        ax.legend(loc="lower right", framealpha=0.9, fontsize=9)
+        ax.set_title("Sideband spectroscopy", loc="left", fontsize=13, pad=10)
 
         fig.tight_layout()
         fig.savefig("sideband_spectroscopy.pdf", bbox_inches="tight")

@@ -95,16 +95,54 @@ class MSGate(EnvExperiment):
         print(f"Bell-subspace population (P_00 + P_11) = {p_pop:.3f}")
         print(f"Leakage (P_01 + P_10)                  = {leakage:.3f}")
 
-        fig, ax = plt.subplots(figsize=(6, 4))
-        labels = ["|00⟩", "|01⟩", "|10⟩", "|11⟩"]
-        values = [p00, p01, p10, p11]
-        colors = ["#2b6cb0", "#aaa", "#aaa", "#2b6cb0"]
-        ax.bar(labels, values, color=colors, edgecolor="black", lw=0.5)
-        ax.axhline(0.5, color="#c53030", lw=0.8, ls="--", alpha=0.7, label="ideal (0.5)")
-        ax.set_ylabel("Probability")
-        ax.set_ylim(0, 1)
-        ax.set_title("MS gate output populations", loc="left")
-        ax.legend(loc="upper right", framealpha=0.9, fontsize=9)
+        plt.rcParams.update({
+            "font.family": "DejaVu Sans",
+            "font.size": 11,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.labelsize": 12,
+            "xtick.direction": "in",
+            "ytick.direction": "in",
+        })
+
+        DATA_COLOR   = "#2b6cb0"
+        LEAK_COLOR   = "#a0aec0"
+        FIT_COLOR    = "#c53030"
+
+        values = np.array([p00, p01, p10, p11])
+        errs   = np.sqrt(values * (1 - values) / max(self.n_shots, 1))
+        labels = [r"$|00\rangle$", r"$|01\rangle$", r"$|10\rangle$", r"$|11\rangle$"]
+        colors = [DATA_COLOR, LEAK_COLOR, LEAK_COLOR, DATA_COLOR]
+
+        fig, ax = plt.subplots(figsize=(8.5, 4.8))
+
+        ax.bar(labels, values, yerr=errs, color=colors, alpha=0.78,
+               capsize=5, edgecolor="none")
+        ax.axhline(0.5, color=FIT_COLOR, lw=0.8, ls="--", alpha=0.6,
+                   label="ideal (0.5)")
+
+        for x, v, e in zip(range(4), values, errs):
+            ax.text(x, v + e + 0.02, f"{v:.3f}",
+                    ha="center", va="bottom", fontsize=10)
+
+        ax.set_ylabel(r"$P$")
+        ax.set_ylim(0, 1.10)
+        ax.grid(True, alpha=0.25, linestyle=":", axis="y")
+
+        info = (
+            f"$P_{{00}} + P_{{11}} = {p_pop:.3f}$\n"
+            f"leakage $= {leakage:.3f}$\n"
+            f"$N = {self.n_shots}$ shots"
+        )
+        ax.text(
+            0.985, 0.96, info, transform=ax.transAxes,
+            ha="right", va="top", fontsize=10,
+            bbox=dict(boxstyle="round,pad=0.4",
+                      facecolor="white", edgecolor="#bbb", alpha=0.92),
+        )
+        ax.legend(loc="upper left", framealpha=0.9, fontsize=9)
+        ax.set_title("MS gate output populations", loc="left", fontsize=13, pad=10)
+
         fig.tight_layout()
         fig.savefig("ms_gate.pdf", bbox_inches="tight")
         plt.close(fig)

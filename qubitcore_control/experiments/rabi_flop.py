@@ -116,14 +116,14 @@ class RabiFlop(EnvExperiment):
             "ytick.direction": "in",
         })
 
-        DATA_COLOR = "#2b6cb0"
-        FIT_COLOR  = "#c53030"
-        REF_COLOR  = "#2f855a"
+        DATA_COLOR   = "#2b6cb0"
+        FIT_COLOR    = "#c53030"
+        ACCENT_COLOR = "#2f855a"
 
         fig, ax = plt.subplots(figsize=(8.5, 4.8))
 
-        ax.axvline(t_pi * 1e6, color=REF_COLOR, lw=0.8, ls="--", alpha=0.6)
-        ax.text(t_pi * 1e6, 1.02, r"$t_\pi$", color=REF_COLOR,
+        ax.axvline(t_pi * 1e6, color=ACCENT_COLOR, lw=0.8, ls="--", alpha=0.6)
+        ax.text(t_pi * 1e6, 1.02, r"$t_\pi$", color=ACCENT_COLOR,
                 ha="center", va="bottom", fontsize=9,
                 transform=ax.get_xaxis_transform())
 

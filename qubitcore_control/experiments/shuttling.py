@@ -127,7 +127,7 @@ class ShuttlingCheck(EnvExperiment):
         REF_COLOR       = "#c53030"
         stage_colors    = [COOLED_COLOR, SHUTTLED_COLOR, RECOOLED_COLOR]
 
-        fig, ax = plt.subplots(figsize=(8.2, 4.8))
+        fig, ax = plt.subplots(figsize=(8.5, 4.8))
 
         xs = np.arange(3)
         bars = ax.bar(xs, n_bar, yerr=n_bar_err, color=stage_colors,
