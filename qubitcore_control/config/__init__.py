@@ -14,6 +14,7 @@ T2_STAR      = 1e-3               # dephasing time (s)
 # MS Gate
 MS_LOOPS = 1
 MS_GATE_TIME = np.pi / (ETA * OMEGA_RABI) * np.sqrt(MS_LOOPS / 2)
+MS_DETUNING_OFFSET = 2 * np.pi * MS_LOOPS / MS_GATE_TIME   # δ − ω_m  (rad/s)
 MS_SUM_PHASE = 0
 MS_AMPLITUDE = 0.5
 
