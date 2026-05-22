@@ -1,6 +1,6 @@
 from artiq.experiment import kernel, delay, us
 from artiq.language import TFloat, TNone, TInt32
-from qubitcore_control.config.loader import load_trap_config
+from config.loader import load_trap_config
 
 class TrapDCModule:
 
