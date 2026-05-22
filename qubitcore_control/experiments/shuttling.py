@@ -40,6 +40,7 @@ class ShuttlingCheck(EnvExperiment):
         self.measure_duration = float(self.measure_duration)
 
         self.bsb_pi_time = np.pi / (ETA * OMEGA_RABI)
+        self.probe_time = self.bsb_pi_time / 4
         self.rbs_msr_freq = RESONANCE_HZ - SECULAR_FREQ / (2 * np.pi)
         self.bbs_msr_freq = RESONANCE_HZ + SECULAR_FREQ / (2 * np.pi)
 
@@ -70,7 +71,7 @@ class ShuttlingCheck(EnvExperiment):
     @kernel
     def measure(self, frequency):
         self.laser_729.set_frequency(frequency)
-        self.laser_729.pulse(self.bsb_pi_time)
+        self.laser_729.pulse(self.probe_time)
         return self.detection.count(ion_index=0, duration=self.measure_duration)
     
     def analyze(self):
