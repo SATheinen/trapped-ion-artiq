@@ -43,20 +43,10 @@ class ShuttlingCheck(EnvExperiment):
         self.rbs_msr_freq = RESONANCE_HZ - SECULAR_FREQ / (2 * np.pi)
         self.bbs_msr_freq = RESONANCE_HZ + SECULAR_FREQ / (2 * np.pi)
 
-        self.set_dataset(
-          "counts",
-          np.zeros((3, 2, self.n_shots // 2), dtype=np.int32),
-          broadcast=True,
-      )
-
-    def init_device(self):
-        self.laser_729.set_phase(0)
+        self.counts = np.zeros((3, 2, self.n_shots // 2), dtype=np.int32)
 
     @kernel
     def run(self):
-
-        self.init_device()
-        
         for shot in range(self.n_shots):
             sideband = shot % 2
             pair_idx = shot // 2
@@ -65,15 +55,17 @@ class ShuttlingCheck(EnvExperiment):
             # Stage 0 — cooled
             self.cooling.doppler_cool()
             self.cooling.full_automatic_sideband_cool()
-            self.mutate_dataset("counts", (0, sideband, pair_idx), self.measure(freq))
+            self.counts[0, sideband, pair_idx] = self.measure(freq)
 
             # Stage 1 — after shuttle, no recool
             self.shuttling.shuttle(ion_index=2, to_z=0)
-            self.mutate_dataset("counts", (1, sideband, pair_idx), self.measure(freq))
+            self.counts[1, sideband, pair_idx] = self.measure(freq)
 
-            # Stage 2 — after shuttle-and-recool (return to zone 1)
+            # Stage 2 — after shuttle-and-recool
             self.shuttling.shuttle_and_recool(ion_index=2, to_z=1)
-            self.mutate_dataset("counts", (2, sideband, pair_idx), self.measure(freq))
+            self.counts[2, sideband, pair_idx] = self.measure(freq)
+
+        self.set_dataset("counts", self.counts, broadcast=True)
 
     @kernel
     def measure(self, frequency):
