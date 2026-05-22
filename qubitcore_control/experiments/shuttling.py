@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 class ShuttlingCheck(EnvExperiment):
 
     def build(self):
+        self.setattr_device("core")
         self.setattr_argument("n_shots", NumberValue(default=100))
         self.setattr_argument("measure_duration", NumberValue(default=1e-3))
 
-        self.setattr_device("core")
         self.laser_729 = Laser729Module()    
         self.laser_729.build(self)
         self.laser_397_cool = Laser397CoolModule()  
