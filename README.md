@@ -44,11 +44,19 @@ Resolved-sideband cooling on the red sideband, interleaved with optical pumping.
 
 ### Shuttling — `shuttling.py`
 
-Multi-zone ion transport across a segmented trap. Routes and per-route heating are driven from the YAML config in `config/`.
+Multi-zone ion transport across a segmented trap. Routes and per-route heating are driven from the YAML config in `config/`. Each route plays back a precomputed DAC waveform frame-by-frame through the ARTIQ kernel — see the Waveform generation entry below.
 
 ![Shuttling](docs/shuttling.png)
 
 [Full PDF →](docs/shuttling.pdf)
+
+### Waveform generation — `sim/waveform_gen.py`
+
+Solves for the time-dependent electrode voltages that move the trap minimum smoothly between zones in a 7-electrode / 5-zone linear segmented Paul trap. Each electrode contributes a Gaussian basis function `φ_i(z)`, and the per-frame voltage vector is found by a Tikhonov-regularized least-squares fit to three constraints at the desired well position: `U(z₀) = 0`, `U'(z₀) = 0`, `U''(z₀) = m·ω²/e`. The trajectory `z₀(t)` is a minimum-jerk quintic (continuous velocity and acceleration at both endpoints) to avoid impulsive kicks. Running the module sweeps all 20 routes defined in `routes.yaml` and writes one `.npy` per route into `config/waveforms/`, which the `TrapDCModule` then plays back through `Zotino`-style `set_dac` calls inside an `@kernel` loop.
+
+![Waveform Z0 → Z4](docs/waveform_z0_to_z4.png)
+
+[Full PDF →](docs/waveform_z0_to_z4.pdf)
 
 ### Mølmer–Sørensen gate — `ms_gate.py`
 
@@ -148,7 +156,7 @@ The simulator itself lives behind that boundary. `IonChain` holds the full QuTiP
 - **Single-species, fixed parameters.** Only Ca⁺ at a single hard-coded set of operating parameters is modeled. There is no calibration routine — the "true" values in the simulator are also the values experiments are configured against.
 - **One shared motional mode.** The simulator assumes all ions in a zone share a single common mode and tracks `n_bar` as a scalar. Multi-mode coupling and mode crosstalk are not modeled.
 - **Phenomenological decoherence.** T₂* enters as an exponential damping factor on the off-diagonal element during free evolution rather than as a full Lindblad term integrated alongside the unitary. Good enough for Ramsey fits, not a substitute for real noise modeling.
-- **Shuttling is coarse.** Routes have a duration and a heating contribution; no waveform-level DAC simulation, no transport-induced motional excitation beyond the heating term.
+- **Shuttling waveforms are physical but the ion dynamics in them are not.** Voltage waveforms are solved from a proper electrostatic basis with a minimum-jerk trajectory and played frame-by-frame through the simulated DAC, but transport-induced motional excitation is still applied as a per-route Poisson heating term rather than integrated from Newton's equation in the time-varying well.
 
 ## Further reading
 
