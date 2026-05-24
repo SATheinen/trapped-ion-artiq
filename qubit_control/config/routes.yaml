@@ -1,25 +1,25 @@
 trap:
-  zones: [0, 1, 2]
-  interaction_zone: 0 # Zone that is adressed by the 729 Laser
+  zones: [0, 1, 2, 3, 4]
+  interaction_zone: 2 # Zone that is adressed by the 729 Laser
 
 routes:
 
-  # single hop transitions
-  - from: 1
-    to: 0
-    duration_us: 200
-    heating:
-      distribution: poisson
-      mean: 1.0
-    waveform_ref: waveforms/z1_to_z0.npy # placeholder
-
+  # single hop transitions — 200 μs, heating mean 1.0
   - from: 0
     to: 1
     duration_us: 200
     heating:
       distribution: poisson
       mean: 1.0
-    waveform_ref: waveforms/z0_to_z1.npy # placeholder
+    waveform_ref: waveforms/z0_to_z1.npy
+
+  - from: 1
+    to: 0
+    duration_us: 200
+    heating:
+      distribution: poisson
+      mean: 1.0
+    waveform_ref: waveforms/z1_to_z0.npy
 
   - from: 1
     to: 2
@@ -27,29 +27,143 @@ routes:
     heating:
       distribution: poisson
       mean: 1.0
-    waveform_ref: waveforms/z1_to_z2.npy # placeholder
-  
+    waveform_ref: waveforms/z1_to_z2.npy
+
   - from: 2
     to: 1
     duration_us: 200
     heating:
       distribution: poisson
       mean: 1.0
-    waveform_ref: waveforms/z2_to_z1.npy # placeholder
+    waveform_ref: waveforms/z2_to_z1.npy
 
-  # double hop transitions
+  - from: 2
+    to: 3
+    duration_us: 200
+    heating:
+      distribution: poisson
+      mean: 1.0
+    waveform_ref: waveforms/z2_to_z3.npy
+
+  - from: 3
+    to: 2
+    duration_us: 200
+    heating:
+      distribution: poisson
+      mean: 1.0
+    waveform_ref: waveforms/z3_to_z2.npy
+
+  - from: 3
+    to: 4
+    duration_us: 200
+    heating:
+      distribution: poisson
+      mean: 1.0
+    waveform_ref: waveforms/z3_to_z4.npy
+
+  - from: 4
+    to: 3
+    duration_us: 200
+    heating:
+      distribution: poisson
+      mean: 1.0
+    waveform_ref: waveforms/z4_to_z3.npy
+
+  # double hop transitions — 300 μs, heating mean 2.5
   - from: 0
     to: 2
-    duration_us: 450
+    duration_us: 300
     heating:
       distribution: poisson
       mean: 2.5
-    waveform_ref: waveforms/z0_to_z2.npy # placeholder
+    waveform_ref: waveforms/z0_to_z2.npy
 
   - from: 2
     to: 0
-    duration_us: 450
+    duration_us: 300
     heating:
       distribution: poisson
       mean: 2.5
-    waveform_ref: waveforms/z2_to_z0.npy # placeholder
+    waveform_ref: waveforms/z2_to_z0.npy
+
+  - from: 1
+    to: 3
+    duration_us: 300
+    heating:
+      distribution: poisson
+      mean: 2.5
+    waveform_ref: waveforms/z1_to_z3.npy
+
+  - from: 3
+    to: 1
+    duration_us: 300
+    heating:
+      distribution: poisson
+      mean: 2.5
+    waveform_ref: waveforms/z3_to_z1.npy
+
+  - from: 2
+    to: 4
+    duration_us: 300
+    heating:
+      distribution: poisson
+      mean: 2.5
+    waveform_ref: waveforms/z2_to_z4.npy
+
+  - from: 4
+    to: 2
+    duration_us: 300
+    heating:
+      distribution: poisson
+      mean: 2.5
+    waveform_ref: waveforms/z4_to_z2.npy
+
+  # triple hop transitions — 400 μs, heating mean 4.0
+  - from: 0
+    to: 3
+    duration_us: 400
+    heating:
+      distribution: poisson
+      mean: 4.0
+    waveform_ref: waveforms/z0_to_z3.npy
+
+  - from: 3
+    to: 0
+    duration_us: 400
+    heating:
+      distribution: poisson
+      mean: 4.0
+    waveform_ref: waveforms/z3_to_z0.npy
+
+  - from: 1
+    to: 4
+    duration_us: 400
+    heating:
+      distribution: poisson
+      mean: 4.0
+    waveform_ref: waveforms/z1_to_z4.npy
+
+  - from: 4
+    to: 1
+    duration_us: 400
+    heating:
+      distribution: poisson
+      mean: 4.0
+    waveform_ref: waveforms/z4_to_z1.npy
+
+  # quadruple hop transitions — 500 μs, heating mean 5.5
+  - from: 0
+    to: 4
+    duration_us: 500
+    heating:
+      distribution: poisson
+      mean: 5.5
+    waveform_ref: waveforms/z0_to_z4.npy
+
+  - from: 4
+    to: 0
+    duration_us: 500
+    heating:
+      distribution: poisson
+      mean: 5.5
+    waveform_ref: waveforms/z4_to_z0.npy

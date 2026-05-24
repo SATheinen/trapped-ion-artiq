@@ -150,7 +150,15 @@ class SimDCElectrodes:
     def __init__(self, dmgr):
         self.dmgr = dmgr
         self.ion_chain = ion
+        self._voltage_history = []
+        self._current_voltages = None
 
-    def execute_route(self, ion_index, from_zone, to_zone, duration_us, heating_mean):
+    def apply_route_heating(self, ion_index, from_zone, to_zone, heating_mean):
         heat_amount = int(np.random.poisson(heating_mean))
         self.ion_chain.shuttle(ion_index, from_zone, to_zone, heating=heat_amount)
+
+    def set_voltages(self, V):
+        """Mirror of Zotino.set_dac()"""
+        t = time_manager.current_time()
+        self._voltage_history.append((t, np.asarray(V).copy()))
+        self._current_voltages = np.asarray(V).copy()
