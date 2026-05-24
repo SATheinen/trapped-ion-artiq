@@ -2,10 +2,6 @@
 
 A trapped-ion quantum control stack built on [ARTIQ](https://m-labs.hk/artiq/), targeting a Ca⁺ chain. The codebase implements the full path from single-ion Rabi flopping to a two-ion Mølmer–Sørensen entangling gate, and runs end-to-end against a QuTiP-based simulator that mirrors the real ARTIQ device APIs.
 
-## Motivation
-
-I built this project after interviewing with **qubitcore**, who asked me to evaluate whether I could pick up ARTIQ. Creating my own project seems to be the best way to learn ARTIQ alongside getting more comfortable with the underlying processes and hardware. The result is this repository, demonstrating how I can adapt to a problem fast and create immediate value in a startup.
-
 ## Demonstrated experiments
 
 Seven trapped-ion experiments, each runnable end-to-end against the simulator with `artiq_run`. The figure under each entry is the output of that experiment's own `analyze()` method; the full vector PDF is linked alongside.
