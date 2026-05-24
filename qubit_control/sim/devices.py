@@ -1,6 +1,7 @@
 import numpy as np
 from sim.ion_chain import ion
 from sim.core import time_manager
+from config import INTERACTION_ZONE
 from artiq.language.types import TFloat, TInt32, TNone
 
 class SimPMT:
@@ -107,7 +108,7 @@ class SimDDS397Cool():
         duration = time_manager.current_time() - self._t_on
 
         # 397 laser depopulates the motional modes
-        if np.any(self.ion.positions == 0):
+        if np.any(self.ion.positions == INTERACTION_ZONE):
             self.ion.n_bar = self.ion.n_eq + (self.ion.n_bar - self.ion.n_eq) * np.exp(-2000 * duration)
 
         # Turn laser off

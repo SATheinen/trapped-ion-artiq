@@ -29,7 +29,8 @@ N_DARK   = 0.5
 
 # Ion chain
 N_IONS = 3
-INITIAL_POSITIONS = [2, 3, 4]
+INTERACTION_ZONE = 2              # single source of truth — must match routes.yaml
+INITIAL_POSITIONS = [2, 3, 4]     # ion 0 (always measured) sits at the interaction zone
 E_CHARGE = 1.602176634e-19
 M_CA = 40.078 * 1.66053906660e-27
 ELECTRODE_PITCH = 100e-6 

@@ -57,9 +57,9 @@ class MSGate(EnvExperiment):
         self.cooling.full_automatic_sideband_cool()
         self.cooling.optical_pump()
 
-        # Shuttle
-        self.shuttling.shuttle_and_recool(ion_index=0, to_z=0)
-        self.shuttling.shuttle_and_recool(ion_index=1, to_z=0)
+        # Shuttle both ions into the interaction zone for the gate
+        self.shuttling.shuttle_and_recool(ion_index=0, to_z=2)
+        self.shuttling.shuttle_and_recool(ion_index=1, to_z=2)
 
         # ms gate
         self.gate.apply_ms_gate()

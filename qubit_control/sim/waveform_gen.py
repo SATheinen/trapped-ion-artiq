@@ -19,32 +19,33 @@ class WaveformGen:
             voltages_arr[frame, :] = trap.solve_voltages(z0_of_t[frame], k)
         return voltages_arr
     
-    def generate_all_routes(duration=200e-6, dt_s = 1e-6):
+    def generate_all_routes(self, dt_s=1e-6):
+        from config.loader import load_trap_config
         trap = Trap()
-        gen = WaveformGen()
         k = trap.target_curvature(SECULAR_FREQ)
+        cfg = load_trap_config()
 
-        for i in range(N_ZONES):
-            for j in range(N_ZONES):
+        out_dir = Path(__file__).parent.parent / "config" / "waveforms"
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-                z_start = trap.zone_positions[i]
-                z_end = trap.zone_positions[j]
-
-                waveform = gen.generate_waveform(trap, z_start, z_end, duration_s, dt_s, k)
-                n_frames = waveform.shape[0]
-                t = np.linspace(0, duration_s, n_frames)
-
-                out_dir = Path(__file__).parent.parent / "config" / "waveforms"
-                out_dir.mkdir(parents=True, exist_ok=True)
-                npy_path = out_dir / f"z{i}_to_z{j}.npy"
-                np.save(npy_path, waveform)
-                print(f"saved {waveform.shape} waveform → {npy_path}")
+        for (a, b), r in cfg.routes.items():
+            z_start = trap.zone_positions[a]
+            z_end   = trap.zone_positions[b]
+            waveform = self.generate_waveform(trap, z_start, z_end,
+                                               r.duration_us * 1e-6, dt_s, k)
+            npy_path = out_dir / Path(r.waveform_ref).name
+            np.save(npy_path, waveform)
+            print(f"  {a}→{b}: {waveform.shape} → {npy_path.name}")
     
 if __name__ == "__main__":
     trap = Trap()
     gen = WaveformGen()
 
-    duration_s = 200e-6
+    # Generate every route's .npy first
+    print("generating all route waveforms…")
+    gen.generate_all_routes()
+
+    duration_s = 500e-6   # match the 4-hop duration in routes.yaml
     dt_s = 1e-6
     k = trap.target_curvature(SECULAR_FREQ)
 
@@ -68,39 +69,63 @@ if __name__ == "__main__":
     z_grid = np.linspace(trap.electrode_positions[0], trap.electrode_positions[-1], 200)
     U_grid = np.array([trap.potential(z_grid, V_t) for V_t in waveform])
 
+    plt.rcParams.update({
+        "font.family": "DejaVu Sans",
+        "font.size": 11,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.labelsize": 12,
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+    })
+
+    TRAJ_COLOR   = "#2b6cb0"   # blue   — trajectory
+    ZONE_COLOR   = "#a0aec0"   # grey   — zone reference lines
+    TARGET_COLOR = "#c53030"   # red    — target overlay on heatmap
+    electrode_colors = plt.cm.viridis(np.linspace(0.05, 0.95, N_ELECTRODES))
+
     fig, axes = plt.subplots(3, 1, figsize=(9, 9), sharex=True)
 
     # — Top: trajectory z₀(t) with zone reference lines
     ax = axes[0]
-    ax.plot(t * 1e6, z0_of_t * 1e6, color="black", lw=2)
+    ax.plot(t * 1e6, z0_of_t * 1e6, color=TRAJ_COLOR, lw=2)
     for k_zone, z in enumerate(trap.zone_positions):
-        ax.axhline(z * 1e6, color="grey", lw=0.5, ls="--", alpha=0.5)
+        ax.axhline(z * 1e6, color=ZONE_COLOR, lw=0.6, ls="--", alpha=0.6)
         ax.text(duration_s * 1e6 * 1.01, z * 1e6, f"Z{k_zone}",
-                va="center", fontsize=9)
-    ax.set_ylabel("z₀(t)  (μm)")
-    ax.set_title("Minimum-jerk trajectory  Z0 → Z4")
-    ax.grid(alpha=0.25, ls=":")
+                va="center", fontsize=9, color=ZONE_COLOR)
+    ax.set_ylabel(r"$z_0(t)$  (μm)")
+    ax.set_title("Minimum-jerk trajectory", loc="left", fontsize=12, pad=8)
+    ax.grid(True, alpha=0.25, ls=":", axis="y")
 
-    # — Middle: 7 electrode voltage traces
+    # — Middle: 7 electrode voltage traces (viridis ramp = spatial order)
     ax = axes[1]
     for i in range(N_ELECTRODES):
-        ax.plot(t * 1e6, waveform[:, i], lw=1.4, label=f"V{i}")
-    ax.set_ylabel("Vᵢ(t)  (V)")
-    ax.set_title("Electrode voltages")
-    ax.legend(loc="upper right", ncol=4, fontsize=8)
-    ax.grid(alpha=0.25, ls=":")
+        ax.plot(t * 1e6, waveform[:, i], lw=1.5,
+                color=electrode_colors[i], label=f"V{i}")
+    ax.set_ylabel(r"$V_i(t)$  (V)")
+    ax.set_title("Electrode voltages", loc="left", fontsize=12, pad=8)
+    ax.legend(loc="upper right", ncol=4, fontsize=8, framealpha=0.9)
+    ax.grid(True, alpha=0.25, ls=":", axis="y")
 
     # — Bottom: U(z,t) heatmap with the target z₀(t) overlaid
     ax = axes[2]
     pcm = ax.pcolormesh(t * 1e6, z_grid * 1e6, U_grid.T,
                         shading="auto", cmap="viridis")
-    ax.plot(t * 1e6, z0_of_t * 1e6, color="white", lw=1.2, ls="--", alpha=0.85)
-    ax.set_xlabel("t (μs)")
-    ax.set_ylabel("z (μm)")
-    ax.set_title("U(z,t)  —  white dashed: target z₀(t)")
-    fig.colorbar(pcm, ax=ax, label="U (V)")
+    ax.plot(t * 1e6, z0_of_t * 1e6, color=TARGET_COLOR, lw=1.2, ls="--", alpha=0.9)
+    ax.set_xlabel(r"$t$  (μs)")
+    ax.set_ylabel(r"$z$  (μm)")
+    ax.set_title(r"$U(z, t)$  —  dashed: target $z_0(t)$",
+                 loc="left", fontsize=12, pad=8)
+    fig.colorbar(pcm, ax=ax, label=r"$U$  (V)")
 
-    fig.tight_layout()
+    fig.suptitle(
+        f"Shuttling waveform    Z0 → Z4    "
+        f"$T = {duration_s*1e6:.0f}\\,\\mu s$,  $N = {n_frames}$ frames",
+        x=0.02, ha="left", fontsize=13,
+    )
+
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
     pdf_path = Path("waveform_z0_to_z4.pdf")
     fig.savefig(pdf_path, bbox_inches="tight")
+    plt.close(fig)
     print(f"saved figure → {pdf_path.resolve()}")

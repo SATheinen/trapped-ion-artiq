@@ -4,7 +4,8 @@ import qutip as qt
 from config import (
     N_IONS, N_BAR_INITIAL, N_BAR_DOPPLER,
     N_BRIGHT, N_DARK,
-    OMEGA_RABI, RESONANCE_HZ, SECULAR_FREQ, ETA, T2_STAR, MS_GATE_TIME, INITIAL_POSITIONS
+    OMEGA_RABI, RESONANCE_HZ, SECULAR_FREQ, ETA, T2_STAR, MS_GATE_TIME,
+    INITIAL_POSITIONS, INTERACTION_ZONE,
 )
 
 class IonChain:
@@ -111,7 +112,7 @@ class IonChain:
         ])
 
         U_qobj = qt.Qobj(U)
-        ops = [U_qobj if self.positions[i] == 0 else qt.qeye(2) for i in range(self.N_IONS)]
+        ops = [U_qobj if self.positions[i] == INTERACTION_ZONE else qt.qeye(2) for i in range(self.N_IONS)]
         U_full = qt.tensor(ops)
         self.psi = U_full * self.psi
 
@@ -122,15 +123,15 @@ class IonChain:
             self.n_bar = self.n_bar + p_excited
 
     def apply_ms_gate(self, duration):
-        if np.sum(self.positions==0) != 2:
-            raise ValueError(f"MS gate requires exactly two ions in zone 0")
+        if np.sum(self.positions == INTERACTION_ZONE) != 2:
+            raise ValueError(f"MS gate requires exactly two ions in zone {INTERACTION_ZONE}")
         if self.n_bar > 0.1:
           print(f"WARNING: MS gate with n_bar={self.n_bar:.2f}, fidelity will degrade.")
- 
+
         chi = np.pi / 4 * (duration / MS_GATE_TIME)
 
-        zone0 = np.where(self.positions == 0)[0]
-        ion_a, ion_b = int(zone0[0]), int(zone0[1])
+        zone_ions = np.where(self.positions == INTERACTION_ZONE)[0]
+        ion_a, ion_b = int(zone_ions[0]), int(zone_ions[1])
 
         ops = [qt.qeye(2)] * self.N_IONS
         ops[ion_a] = qt.sigmax()
@@ -144,7 +145,8 @@ class IonChain:
         if self.positions[ion_index] != from_z: # check if ion is in the correct zone
             raise ValueError(f"Ion {ion_index} is in zone {self.positions[ion_index]}, not {from_z}")
         self.positions[ion_index] = to_z # Move ion
-        if to_z == 0:
-            self.n_bar += heating
+        # Heating goes to the shared phonon mode regardless of destination —
+        # the gate-zone ion sees it because the mode is shared across all zones.
+        self.n_bar += heating
         
 ion = IonChain()
