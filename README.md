@@ -92,12 +92,12 @@ The flake targets `x86_64-linux`. On macOS or other systems you will need either
 All experiments are standard ARTIQ `EnvExperiment` classes and run through `artiq_run` against the simulated device database:
 
 ```bash
-cd qubit_control
 artiq_run --device-db qubit_control/device_db_sim.py \
           qubitcore_control/experiments/rabi_flop.py
 ```
 or
 ```bash
+cd qubit_control
 bash start_experiment.sh
 ```
 
