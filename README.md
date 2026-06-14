@@ -68,12 +68,21 @@ Two-ion entangling gate via simultaneous red/blue sideband drive detuned from th
 
 ## Installation
 
-The project pins all dependencies (ARTIQ release-9, NumPy, SciPy, QuTiP, Matplotlib, h5py, PyYAML) through Nix, so the only prerequisite is a working Nix installation with flakes enabled.
+The project pins all dependencies (ARTIQ release-9, NumPy, SciPy, QuTiP, Matplotlib, h5py, PyYAML) through Nix, so the only prerequisite is a working Nix installation with flakes enabled. The following installation was testet on Ubuntu 22.04 LTS.
 
 ```bash
-git clone https://github.com/SATheinen/Artiq_test.git
-nix develop
-cd qubit_control
+git clone https://github.com/SATheinen/trapped-ion-artiq.git
+cd trapped-ion-artiq
+
+bash setup.sh
+
+. "$HOME/.nix-profile/etc/profile.d/nix.sh"
+```
+
+Every time entering the shell you have to start nix develop with the flag
+
+```bash
+nix develop --accept-flake-config
 ```
 
 The flake targets `x86_64-linux`. On macOS or other systems you will need either a Linux VM or to substitute the inputs in `flake.nix`. The M-Labs binary cache is configured in `nixConfig`, so the ARTIQ build should not need to compile from source.
@@ -83,6 +92,7 @@ The flake targets `x86_64-linux`. On macOS or other systems you will need either
 All experiments are standard ARTIQ `EnvExperiment` classes and run through `artiq_run` against the simulated device database:
 
 ```bash
+cd qubit_control
 artiq_run --device-db qubit_control/device_db_sim.py \
           qubitcore_control/experiments/rabi_flop.py
 ```
