@@ -73,21 +73,44 @@ fi
 log "Nix ready: $(nix --version)"
 cat <<'EOF'
 
-────────────────────────────────────────────────────────────────────────────
-Setup complete. Next, from the repo root:
+╔══════════════════════════════════════════════════════════════════════════╗
+║                          SETUP COMPLETE                                  ║
+╚══════════════════════════════════════════════════════════════════════════╝
 
-    nix develop --accept-flake-config        # enter the dev shell
-    cd qubit_control && bash start_experiment.sh
+  ┌────────────────────────────────────────────────────────────────────┐
+  │  STEP 1 — In every NEW shell, load Nix from your home profile:     │
+  │                                                                    │
+  │      . "$HOME/.nix-profile/etc/profile.d/nix.sh"                   │
+  │                                                                    │
+  │  (The installer appends this to ~/.profile / ~/.bashrc, but a      │
+  │   fresh terminal won't have it until you log out and back in,      │
+  │   or source it manually as shown above.)                           │
+  └────────────────────────────────────────────────────────────────────┘
 
-First `nix develop` pulls the closure from the m-labs + nixos.org caches
-(1–3 GB, ~5–15 min). --accept-flake-config lets the flake supply its own
-binary cache, so ARTIQ is *fetched*, not rebuilt from source.
+  ┌────────────────────────────────────────────────────────────────────┐
+  │  STEP 2 — ALWAYS enter the dev shell BEFORE running any            │
+  │           experiment, from the repo root:                          │
+  │                                                                    │
+  │      nix develop --accept-flake-config                             │
+  │                                                                    │
+  │  Without this, ARTIQ and its Python deps are NOT on your PATH      │
+  │  and experiments will fail to import. The --accept-flake-config    │
+  │  flag lets the flake supply its m-labs binary cache, so ARTIQ      │
+  │  is *fetched* rather than rebuilt from source.                     │
+  └────────────────────────────────────────────────────────────────────┘
 
-To stop typing the flag each time, add the m-labs substituter to nix.conf
-permanently — copy the exact substituter URL + public key from the flake's
-own `nixConfig` block (authoritative source) into ~/.config/nix/nix.conf as:
-    extra-substituters = <url from flake>
-    extra-trusted-public-keys = <key from flake>
-Then plain `nix develop` works.
-────────────────────────────────────────────────────────────────────────────
+  Then, inside the dev shell:
+
+      cd qubit_control && bash start_experiment.sh
+
+  First `nix develop` pulls the closure from the m-labs + nixos.org
+  caches (1–3 GB, ~5–15 min). Subsequent runs are near-instant.
+
+  ── Optional: skip the --accept-flake-config flag every time ──
+  Copy the substituter URL + public key from the flake's `nixConfig`
+  block into ~/.config/nix/nix.conf:
+      extra-substituters       = <url from flake>
+      extra-trusted-public-keys = <key from flake>
+  Then plain `nix develop` works.
+──────────────────────────────────────────────────────────────────────────
 EOF
