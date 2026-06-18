@@ -44,3 +44,10 @@ ADJACENCY = {z: [n for n in (z-1, z+1) if 0 <= n < N_ZONES] for z in range(N_ZON
 MERGE_HEATING = 5.0    # means (Poisson); all ≫ transport's 1.0
 SPLIT_HEATING = 10.0   # separation through the double well is the hottest op
 SWAP_HEATING  = 8.0    # junction-reorder cost
+
+BEAM_ZONES = {
+      "dds_729":      INTERACTION_ZONE,  # gate, rotations, thermometry probe
+      "dds_397_cool": COOLING_ZONE,      # Doppler/sideband cooling (= gate)
+      "dds_397_pump": READOUT_ZONE,      # optical pumping / reset (mid-circuit, away from data)
+      "ttl_pmt":      READOUT_ZONE,      # detection
+  }

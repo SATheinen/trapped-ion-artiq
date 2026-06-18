@@ -48,22 +48,26 @@ class ShuttlingCheck(EnvExperiment):
 
     @kernel
     def run(self):
+        self.shuttling.transport(0, 1)            # one-time: D0 2->1 frees zone 2
+
         for shot in range(self.n_shots):
             sideband = shot % 2
             pair_idx = shot // 2
             freq     = self.rbs_msr_freq if sideband == 0 else self.bbs_msr_freq
 
-            # Stage 0 — cooled
+            # Stage 0 — cooled (A0 is at the gate)
             self.cooling.doppler_cool()
             self.cooling.full_automatic_sideband_cool()
             self.counts[0, sideband, pair_idx] = self.measure(freq)
 
-            # Stage 1 — after shuttle, no recool
-            self.shuttling.shuttle(ion_index=2, to_z=0)
+            # Stage 1 — transport heats the MOVED ion (round-trip, no recool)
+            self.shuttling.transport(1, 2)        # A0 3->2
+            self.shuttling.transport(1, 3)        # A0 2->3, back at gate, now hot
             self.counts[1, sideband, pair_idx] = self.measure(freq)
 
-            # Stage 2 — after shuttle-and-recool
-            self.shuttling.shuttle_and_recool(ion_index=2, to_z=1)
+            # Stage 2 — recool removes it (A0 still at gate)
+            self.cooling.doppler_cool()
+            self.cooling.full_automatic_sideband_cool()
             self.counts[2, sideband, pair_idx] = self.measure(freq)
 
         self.set_dataset("counts", self.counts, broadcast=True)
@@ -72,7 +76,7 @@ class ShuttlingCheck(EnvExperiment):
     def measure(self, frequency):
         self.laser_729.set_frequency(frequency)
         self.laser_729.pulse(self.probe_time)
-        return self.detection.count(ion_index=0, duration=self.measure_duration)
+        return self.detection.count(ion_index=1, duration=self.measure_duration)
     
     def analyze(self):
         counts = self.get_dataset("counts")    # (3, 2, n_pairs)
