@@ -5,7 +5,7 @@ from system.modules.laser_397 import Laser397CoolModule, Laser397PumpModule
 from system.modules.trap_dc import TrapDCModule
 from system.services.cooling import CoolingService
 from system.services.ion_shuttling import ShuttlingService
-from config import N_IONS
+from config import N_IONS, INITIAL_POSITIONS
 import numpy as np
 
 class TransportCheck(EnvExperiment):
@@ -51,7 +51,11 @@ class TransportCheck(EnvExperiment):
         except ValueError as e:
             print("OK target blocked:", e)        # expect: zone 4 held by ion 2
 
-        from sim.ion_chain import IonChain as ion
+        # Reset ions for next test
+        self.trap_dc._positions = np.array(INITIAL_POSITIONS)
+        ion.positions = np.array(INITIAL_POSITIONS)
+
+        from sim.ion_chain import ion
         GATE = self.trap_dc.interaction_zone
         synced = lambda: list(self.trap_dc._positions) == list(ion.positions)
 
