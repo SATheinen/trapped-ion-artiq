@@ -1,7 +1,7 @@
 from artiq.experiment import kernel, delay, us
 from artiq.language import TFloat, TNone, TInt32
 from config.loader import load_trap_config
-from config import INITIAL_POSITIONS, N_IONS, ADJACENCY
+from config import INITIAL_POSITIONS, MERGE_HEATING, SPLIT_HEATING, SWAP_HEATING
 from pathlib import Path
 import numpy as np
 
@@ -28,12 +28,28 @@ class TrapDCModule:
         self._positions = np.array(INITIAL_POSITIONS)
         self.interaction_zone = cfg.interaction_zone
 
+    def ions_in_zone(self, zone: int) -> list:
+        return [int(i) for i in np.where(self._positions == zone)[0]]
+
     def occupant(self, zone: int) -> int:
         found = np.where(self._positions == zone)[0]
         if found.size > 0:
             return int(found[0])
         else:
             return -1
+        
+    def merge(self, a, b):
+      self._positions[a] = self.interaction_zone
+      self._positions[b] = self.interaction_zone
+      self._dc.apply_merge(a, b, MERGE_HEATING)
+
+    def split(self, ion, to_zone):
+        self._positions[ion] = to_zone
+        self._dc.apply_split(ion, to_zone, SPLIT_HEATING)
+
+    def swap(self, x, y):
+        self._positions[x], self._positions[y] = self._positions[y], self._positions[x]
+        self._dc.apply_swap(x, y, SWAP_HEATING)
 
     @kernel
     def shuttle(self, ion_index: TInt32, target_zone: TInt32) -> TNone:

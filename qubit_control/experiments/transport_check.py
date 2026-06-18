@@ -50,3 +50,31 @@ class TransportCheck(EnvExperiment):
             print("FAIL")
         except ValueError as e:
             print("OK target blocked:", e)        # expect: zone 4 held by ion 2
+
+        from sim.ion_chain import IonChain as ion
+        GATE = self.trap_dc.interaction_zone
+        synced = lambda: list(self.trap_dc._positions) == list(ion.positions)
+
+        # MERGE — A0(ion1) is at gate 3, D0(ion0) at 2 (adjacent)
+        self.shuttling.merge(0, 1)
+        assert self.trap_dc.get_zone(0) == GATE and self.trap_dc.get_zone(1) == GATE
+        assert synced(); print("OK merge")
+
+        # SPLIT — D0 back out to zone 2 (now empty)
+        nb = ion.n_bar.copy()
+        self.shuttling.split(0, 2)
+        assert self.trap_dc.get_zone(0) == 2 and self.trap_dc.get_zone(1) == GATE
+        assert ion.n_bar[0] > nb[0] and ion.n_bar[1] > nb[1]   # both heated
+        assert synced(); print("OK split")
+
+        # SWAP — A1(ion3,z5) <-> D2(ion4,z6); layout is back to [2,3,4,5,6]
+        self.shuttling.swap(3, 4)
+        assert self.trap_dc.get_zone(3) == 6 and self.trap_dc.get_zone(4) == 5
+        assert synced(); print("OK swap")
+
+        # RAISE checks
+        for call, label in [((0, 2), "merge non-adjacent"), ]:
+            try: self.shuttling.merge(*call); print("FAIL", label)
+            except ValueError as e: print("OK", label+":", e)
+        try: self.shuttling.swap(0, 4); print("FAIL swap non-adjacent")
+        except ValueError as e: print("OK swap non-adjacent:", e)

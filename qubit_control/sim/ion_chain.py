@@ -160,5 +160,22 @@ class IonChain:
             raise ValueError(f"Zone {to_z} already occupied by ion {int(others[0])}")
         self.positions[ion_index] = to_z # Move ion
         self.n_bar[ion_index] += heating
+
+    def merge(self, a, b, heating):
+      self.positions[a] = INTERACTION_ZONE
+      self.positions[b] = INTERACTION_ZONE
+      self.n_bar[a] += heating
+      self.n_bar[b] += heating
+
+    def split(self, ion, to_zone, heating):
+        gate_ions = np.where(self.positions == INTERACTION_ZONE)[0]   # both, BEFORE the move
+        self.positions[ion] = to_zone
+        for g in gate_ions:
+            self.n_bar[g] += heating                                  # heats leaver AND stayer
+
+    def swap(self, x, y, heating):
+        self.positions[x], self.positions[y] = self.positions[y], self.positions[x]
+        self.n_bar[x] += heating
+        self.n_bar[y] += heating
         
 ion = IonChain()

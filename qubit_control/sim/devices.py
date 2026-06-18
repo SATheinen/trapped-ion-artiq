@@ -163,3 +163,12 @@ class SimDCElectrodes:
         t = time_manager.current_time()
         self._voltage_history.append((t, np.asarray(V).copy()))
         self._current_voltages = np.asarray(V).copy()
+
+    def apply_merge(self, a, b, mean):
+      self.ion_chain.merge(a, b, int(np.random.poisson(mean)))
+
+    def apply_split(self, ion, to_zone, mean):
+        self.ion_chain.split(ion, to_zone, int(np.random.poisson(mean)))
+
+    def apply_swap(self, x, y, mean):
+        self.ion_chain.swap(x, y, int(np.random.poisson(mean)))

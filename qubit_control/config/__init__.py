@@ -41,3 +41,6 @@ ELECTRODE_PITCH = 100e-6
 N_ELECTRODES = 9
 N_ZONES = 7
 ADJACENCY = {z: [n for n in (z-1, z+1) if 0 <= n < N_ZONES] for z in range(N_ZONES)}
+MERGE_HEATING = 5.0    # means (Poisson); all ≫ transport's 1.0
+SPLIT_HEATING = 10.0   # separation through the double well is the hottest op
+SWAP_HEATING  = 8.0    # junction-reorder cost
