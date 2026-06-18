@@ -52,10 +52,10 @@ class TransportCheck(EnvExperiment):
             print("OK target blocked:", e)        # expect: zone 4 held by ion 2
 
         # Reset ions for next test
+        from sim.ion_chain import ion
         self.trap_dc._positions = np.array(INITIAL_POSITIONS)
         ion.positions = np.array(INITIAL_POSITIONS)
 
-        from sim.ion_chain import ion
         GATE = self.trap_dc.interaction_zone
         synced = lambda: list(self.trap_dc._positions) == list(ion.positions)
 
