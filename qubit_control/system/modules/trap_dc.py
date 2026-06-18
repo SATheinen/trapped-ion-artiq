@@ -29,7 +29,7 @@ class TrapDCModule:
         self.interaction_zone = cfg.interaction_zone
 
     def occupant(self, zone: int) -> int:
-        found = np.where(self._positions == zone)
+        found = np.where(self._positions == zone)[0]
         if found.size > 0:
             return found
         else:
