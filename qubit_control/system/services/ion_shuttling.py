@@ -11,7 +11,24 @@ class ShuttlingService:
         self.core = trap_dc.core
         
     def transport(self, ion_index: TInt32, to_z: TInt32) -> TNone:
+        current = self._trap_dc.get_zone(ion_index)
+        if current == to_z: return
 
+        step = +1 if to_z > current else -1
+        path = range(current + step, to_z + step, step)
+
+        # Validate path first
+        prev = current
+        for z in path:
+            assert z in ADJACENCY[prev]
+            blocker = self._trap_dc.occupant(z)
+            if blocker >= 0:
+                raise ValueError(f"transport blocked: zone {z} held by ion {blocker}")
+            prev = z
+
+        # Execute
+        for z in path:
+            self._trap_dc.shuttle(ion_index, z)
 
     def shuttle(self, ion_index: TInt32, to_z: TInt32) -> TNone:
         self._trap_dc.shuttle(ion_index, to_z)
