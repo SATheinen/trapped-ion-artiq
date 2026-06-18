@@ -167,3 +167,35 @@ routes:
       distribution: poisson
       mean: 5.5
     waveform_ref: waveforms/z4_to_z0.npy
+
+  - from: 4
+    to: 5
+    duration_us: 200
+    heating:
+      distribution: poisson
+      mean: 1.0
+    waveform_ref: waveforms/z4_to_z5.npy
+
+  - from: 5
+    to: 4
+    duration_us: 200
+    heating:
+      distribution: poisson
+      mean: 1.0
+    waveform_ref: waveforms/z5_to_z4.npy
+
+  - from: 5
+    to: 6
+    duration_us: 200
+    heating:
+      distribution: poisson
+      mean: 1.0
+    waveform_ref: waveforms/z5_to_z6.npy
+
+  - from: 6
+    to: 5
+    duration_us: 200
+    heating:
+      distribution: poisson
+      mean: 1.0
+    waveform_ref: waveforms/z6_to_z5.npy
