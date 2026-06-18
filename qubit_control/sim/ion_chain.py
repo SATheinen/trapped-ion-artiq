@@ -154,9 +154,10 @@ class IonChain:
     def shuttle(self, ion_index, from_z, to_z, heating):
         if self.positions[ion_index] != from_z: # check if ion is in the correct zone
             raise ValueError(f"Ion {ion_index} is in zone {self.positions[ion_index]}, not {from_z}")
-        if np.where(self.positions == to_z)[0] > 0:
-            if to_z != INTERACTION_ZONE:
-                raise ValueError(f"Zone {to_z} is already occupied and {ion_index} cannot be moved there")
+        others = np.where(self.positions == to_z)[0]   # ion indices sitting at to_z
+        others = others[others != ion_index]           # don't count yourself
+        if others.size > 0 and to_z != INTERACTION_ZONE:
+            raise ValueError(f"Zone {to_z} already occupied by ion {int(others[0])}")
         self.positions[ion_index] = to_z # Move ion
         self.n_bar[ion_index] += heating
         
