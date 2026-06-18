@@ -137,7 +137,7 @@ class IonChain:
         n_gate = np.sum(self.n_bar[zone_ions])
 
         if n_gate > 0.1:
-          print(f"WARNING: MS gate with n_bar={self.n_bar:.2f}, fidelity will degrade.")
+            print(f"WARNING: MS gate with n_bar={n_gate:.2f}, fidelity will degrade.")
 
         chi = np.pi / 4 * (duration / MS_GATE_TIME)
 
