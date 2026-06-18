@@ -25,6 +25,9 @@ class TransportCheck(EnvExperiment):
         self.cooling.build(self.laser_729, self.laser_397_cool,
                             self.laser_397_pump)
         
+        self.shuttling = ShuttlingService()
+        self.shuttling.build(self.trap_dc, self.cooling)
+        
     def run(self):
 
         # Case A
