@@ -11,6 +11,7 @@ import numpy as np
 class TransportCheck(EnvExperiment):
       
     def build(self):
+        self.setattr_device("core")
         self.laser_729 = Laser729Module()    
         self.laser_729.build(self)
         self.laser_397_cool = Laser397CoolModule()  
