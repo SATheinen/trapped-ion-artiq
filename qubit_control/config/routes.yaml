@@ -1,6 +1,6 @@
 trap:
-  zones: [0, 1, 2, 3, 4]
-  interaction_zone: 2 # Zone that is adressed by the 729 Laser
+  zones: [0, 1, 2, 3, 4, 5, 6]
+  interaction_zone: 3 # Zone that is adressed by the 729 Laser
 
 routes:
 

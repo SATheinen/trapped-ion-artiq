@@ -28,11 +28,15 @@ N_BRIGHT = 40.0
 N_DARK   = 0.5
 
 # Ion chain
-N_IONS = 3
-INTERACTION_ZONE = 2              # single source of truth — must match routes.yaml
-INITIAL_POSITIONS = [2, 3, 4]     # ion 0 (always measured) sits at the interaction zone
+N_IONS = 5
+INTERACTION_ZONE = 3              # = Gate Zone, single source of truth — must match routes.yaml
+READOUT_ZONE = 6 
+INITIAL_POSITIONS = [2, 3, 4, 5, 6]
+DATA_IONS = [0, 2, 4]
+ANCILLA_IONS = [1, 3]
 E_CHARGE = 1.602176634e-19
 M_CA = 40.078 * 1.66053906660e-27
 ELECTRODE_PITCH = 100e-6 
-N_ELECTRODES = 7
-N_ZONES = 5
+N_ELECTRODES = 9
+N_ZONES = 7
+ADJACENCY = {z: [n for n in (z-1, z+1) if 0 <= n < N_ZONES] for z in range(N_ZONES)}
