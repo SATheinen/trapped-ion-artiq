@@ -13,7 +13,7 @@ class IonChain:
     def __init__(self):
         self.N_IONS = N_IONS
         self.psi = qt.tensor([qt.basis(2, 0)] * self.N_IONS) # initialize psi for N_IONS in groundstate
-        self.n_bar = N_BAR_INITIAL # Phonon motional mode, assuming all zones share one mode (Simplification of reality)
+        self.n_bar = np.zeros(self.N_IONS) + N_BAR_INITIAL # Phonon motional mode
         self.n_eq = N_BAR_DOPPLER # laser 397 driven equilibrium motional modes
         self.positions = np.array(INITIAL_POSITIONS) # Zone each ion is residing in
 
@@ -82,17 +82,24 @@ class IonChain:
         d_rsb = abs(delta + self.secular_freq)
         d_bsb = abs(delta - self.secular_freq)
 
+        adressed_ion = None
+        for i in range(self.N_IONS):
+            if self.positions[i] == INTERACTION_ZONE:
+                adressed_ion = i
+        if adressed_ion == None:
+            raise ValueError("No ion in the interaction zone")
+
         # pick nearest
         if d_carrier <= d_rsb and d_carrier <= d_bsb:
             eff_rabi = self.omega_rabi
             residual = delta
             kind = "carrier"
         elif d_rsb <= d_bsb:
-            eff_rabi = self.omega_rabi * self.eta * np.sqrt(max(self.n_bar, 1e-6))
+            eff_rabi = self.omega_rabi * self.eta * np.sqrt(max(self.n_bar[adressed_ion], 1e-6))
             residual = delta + self.secular_freq
             kind = "rsb"
         else:
-            eff_rabi = self.omega_rabi * self.eta * np.sqrt(self.n_bar + 1)
+            eff_rabi = self.omega_rabi * self.eta * np.sqrt(self.n_bar[adressed_ion] + 1)
             residual = delta - self.secular_freq
             kind = "bsb"
 
@@ -118,19 +125,22 @@ class IonChain:
 
         # phonon bookkeeping (approximate)
         if kind == "rsb":
-            self.n_bar = max(0.0, self.n_bar - p_excited)
+            self.n_bar[adressed_ion] = max(0.0, self.n_bar[adressed_ion] - p_excited)
         elif kind == "bsb":
-            self.n_bar = self.n_bar + p_excited
+            self.n_bar[adressed_ion] = self.n_bar[adressed_ion] + p_excited
 
     def apply_ms_gate(self, duration):
         if np.sum(self.positions == INTERACTION_ZONE) != 2:
             raise ValueError(f"MS gate requires exactly two ions in zone {INTERACTION_ZONE}")
-        if self.n_bar > 0.1:
+        
+        zone_ions = np.where(self.positions == INTERACTION_ZONE)[0]
+        n_gate = np.sum(self.n_bar[zone_ions])
+
+        if n_gate > 0.1:
           print(f"WARNING: MS gate with n_bar={self.n_bar:.2f}, fidelity will degrade.")
 
         chi = np.pi / 4 * (duration / MS_GATE_TIME)
 
-        zone_ions = np.where(self.positions == INTERACTION_ZONE)[0]
         ion_a, ion_b = int(zone_ions[0]), int(zone_ions[1])
 
         ops = [qt.qeye(2)] * self.N_IONS
@@ -147,6 +157,6 @@ class IonChain:
         self.positions[ion_index] = to_z # Move ion
         # Heating goes to the shared phonon mode regardless of destination —
         # the gate-zone ion sees it because the mode is shared across all zones.
-        self.n_bar += heating
+        self.n_bar[ion_index] += heating
         
 ion = IonChain()
