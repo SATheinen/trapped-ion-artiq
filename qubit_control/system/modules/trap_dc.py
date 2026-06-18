@@ -1,7 +1,7 @@
 from artiq.experiment import kernel, delay, us
 from artiq.language import TFloat, TNone, TInt32
 from config.loader import load_trap_config
-from config import INITIAL_POSITIONS
+from config import INITIAL_POSITIONS, N_IONS, ADJACENCY
 from pathlib import Path
 import numpy as np
 
@@ -27,6 +27,13 @@ class TrapDCModule:
 
         self._positions = np.array(INITIAL_POSITIONS)
         self.interaction_zone = cfg.interaction_zone
+
+    def occupant(self, zone: int) -> int:
+        found = np.where(self._positions == zone)
+        if found.size > 0:
+            return found
+        else:
+            return -1
 
     @kernel
     def shuttle(self, ion_index: TInt32, target_zone: TInt32) -> TNone:
