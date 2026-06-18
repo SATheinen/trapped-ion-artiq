@@ -154,9 +154,10 @@ class IonChain:
     def shuttle(self, ion_index, from_z, to_z, heating):
         if self.positions[ion_index] != from_z: # check if ion is in the correct zone
             raise ValueError(f"Ion {ion_index} is in zone {self.positions[ion_index]}, not {from_z}")
+        if np.where(self.positions == to_z)[0] > 0:
+            if to_z != INTERACTION_ZONE:
+                raise ValueError(f"Zone {to_z} is already occupied and {ion_index} cannot be moved there")
         self.positions[ion_index] = to_z # Move ion
-        # Heating goes to the shared phonon mode regardless of destination —
-        # the gate-zone ion sees it because the mode is shared across all zones.
         self.n_bar[ion_index] += heating
         
 ion = IonChain()

@@ -31,7 +31,7 @@ class TrapDCModule:
     def occupant(self, zone: int) -> int:
         found = np.where(self._positions == zone)[0]
         if found.size > 0:
-            return found
+            return int(found[0])
         else:
             return -1
 
