@@ -30,6 +30,7 @@ N_DARK   = 0.5
 # Ion chain
 N_IONS = 5
 INTERACTION_ZONE = 3              # = Gate Zone, single source of truth — must match routes.yaml
+COOLING_ZONE = INTERACTION_ZONE   # Simplification, because dont use coolerants, but need n < 0.1 for ms gate
 READOUT_ZONE = 6 
 INITIAL_POSITIONS = [2, 3, 4, 5, 6]
 DATA_IONS = [0, 2, 4]
