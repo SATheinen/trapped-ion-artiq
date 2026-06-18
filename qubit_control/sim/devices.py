@@ -108,10 +108,8 @@ class SimDDS397Cool():
         duration = time_manager.current_time() - self._t_on
 
         # 397 laser depopulates the motional modes
-        adressed_ions = np.where(self.ion.positions == INTERACTION_ZONE)[0]
-        if adressed_ions:
-            for i in adressed_ions:
-                self.ion.n_bar[i] = self.ion.n_eq + (self.ion.n_bar[i] - self.ion.n_eq) * np.exp(-2000 * duration)
+        for i in np.where(self.ion.positions == INTERACTION_ZONE)[0]:
+            self.ion.n_bar[i] = self.ion.n_eq + (self.ion.n_bar[i] - self.ion.n_eq) * np.exp(-2000 * duration)
 
         # Turn laser off
         self._t_on = None
