@@ -159,6 +159,14 @@ class IonChain:
         U_ms = (-1j * chi * Sxx_full).expm()
         self.psi = U_ms * self.psi
 
+    def cnot(self, control, target):
+        # CNOT = Ry_c(π/2)·XX(π/4)·Rx_c(−π/2)·Rx_t(−π/2)·Ry_c(−π/2)
+        self.apply_rotation(control, -np.pi/2, np.pi/2)   # Ry_c(−π/2)
+        self.apply_rotation(target, -np.pi/2, 0.0)       # Rx_t(−π/2)
+        self.apply_rotation(control, -np.pi/2, 0.0)       # Rx_c(−π/2)
+        self.apply_ms_gate(MS_GATE_TIME)                  # XX(π/4) duration = MS_GATE_TIME
+        self.apply_rotation(control, np.pi/2, np.pi/2)   # Ry_c(+π/2)
+
     def shuttle(self, ion_index, from_z, to_z, heating):
         if self.positions[ion_index] != from_z: # check if ion is in the correct zone
             raise ValueError(f"Ion {ion_index} is in zone {self.positions[ion_index]}, not {from_z}")
