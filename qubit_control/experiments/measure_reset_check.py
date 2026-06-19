@@ -45,11 +45,13 @@ class MeasureResetCheck(EnvExperiment):
         count = self.readout.measure_and_reset(4, duration=1e-3)
         print("ancilla count:", count)
 
-        print("positions :", list(ion.positions))
-        print("ion0 before:", spec_before.full().round(3).tolist())
-        print("ion0 after :", ion.psi.ptrace(0).full().round(3).tolist())
-        print("ion4 after :", ion.psi.ptrace(4).full().round(3).tolist())
-        print("OK: ancilla reset, spectator intact")
+        spec = ion.psi.ptrace(0)
+        spec = spec / spec.tr()                  # free evolution shrank the global norm; renormalize
+        # A whole-register reset would give |0><0| (no coherence, p1=0). The spectator DOES dephase
+        # over the 500us pump delay (expected T2) — but its state survives the ancilla reset.
+        assert abs(spec[0, 1]) > 0.2,            f"spectator coherence destroyed: {spec}"
+        assert float(spec[1, 1].real) > 0.1,     f"spectator excited population gone: {spec}"
+        print("OK: ancilla reset; spectator coherence intact:", round(abs(spec[0,1]), 3))
 
         try:                                              # guard fires off-readout
             self.readout.measure_and_reset(0, duration=1e-3)

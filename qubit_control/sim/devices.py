@@ -142,9 +142,7 @@ class SimDDS397Pump():
     def _end_pulse(self):
         if self._t_on is None:
             return
-        hit = np.where(self.ion.positions == self.target_zone)[0]
-        print(f"[PUMP] target={self.target_zone}  resetting={list(hit)}  positions={list(self.ion.positions)}")
-        for i in hit:
+        for i in np.where(self.ion.positions == self.target_zone)[0]:
             self.ion.reset_ion(int(i))
         self._t_on = None
 
