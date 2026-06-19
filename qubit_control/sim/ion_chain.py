@@ -11,6 +11,7 @@ from config import (
 class IonChain:
 
     def __init__(self):
+        self.dephasing_on = True
         self.N_IONS = N_IONS
         self.psi = qt.tensor([qt.basis(2, 0)] * self.N_IONS) # initialize psi for N_IONS in groundstate
         self.n_bar = np.zeros(self.N_IONS) + N_BAR_INITIAL # Phonon motional mode
@@ -59,6 +60,8 @@ class IonChain:
         self.psi = U * self.psi
 
     def free_evolve(self, ion_index, detuning_rad, duration):
+        if not self.dephasing_on:
+            return
         damp = np.exp(-duration / self.T2_star)              # ✓ real, dimensionless damping
         D = qt.Qobj([
             [1, 0],
