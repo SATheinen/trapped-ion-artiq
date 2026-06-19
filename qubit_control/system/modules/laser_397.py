@@ -10,9 +10,6 @@ class Laser397CoolModule():
     def set_frequency(self, frequency: float) -> None:
         self._dds_397.set_frequency(frequency)
 
-    def set_target_zone(self, zone):
-        self._dds_397.set_target_zone(zone)
-
     def set_phase(self, phi: float) -> None:
         self._dds_397.set_phase(phi)
 
@@ -30,6 +27,9 @@ class Laser397PumpModule():
 
     def set_frequency(self, frequency: float) -> None:
         self._dds_397.set_frequency(frequency)
+
+    def set_target_zone(self, zone):
+        self._dds_397.set_target_zone(zone)
 
     def set_phase(self, phi: float) -> None:
         self._dds_397.set_phase(phi)
