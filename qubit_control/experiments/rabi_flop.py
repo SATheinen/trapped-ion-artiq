@@ -69,7 +69,7 @@ class RabiFlop(EnvExperiment):
     @kernel
     def pulse_and_count(self, duration: TFloat) -> TInt32:
         self.laser_729.pulse(duration)
-        return self.detection.count(ion_index=0, duration=self.measure_duration)
+        return self.detection.count(ion_index=1, duration=self.measure_duration)
 
     def analyze(self):
         t = self.pulse_durations
