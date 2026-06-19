@@ -33,7 +33,7 @@ class MeasureResetCheck(EnvExperiment):
         self.shuttling.build(self.trap_dc, self.cooling)
 
         self.readout = ReadoutService()
-        self.readout.build(self.detection, self.laser_397_pump)
+        self.readout.build(self.detection, self.laser_397_pump, self.trap_dc)
         
     def run(self):
         from sim.ion_chain import ion
