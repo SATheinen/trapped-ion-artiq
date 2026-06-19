@@ -136,14 +136,14 @@ class SimDDS397Pump():
         # Turn laser on
         self._t_on = time_manager.current_time()
 
+    def set_target_zone(self, zone):
+        self.target_zone = zone
+
     def _end_pulse(self):
-        # Check if laser was turned on before
-        if self._t_on == None:
+        if self._t_on is None:
             return
-
-        self.ion.reset_to_ground()
-
-        # Turn laser off
+        for i in np.where(self.ion.positions == self.target_zone)[0]:
+            self.ion.reset_ion(int(i))
         self._t_on = None
 
 class SimDCElectrodes:

@@ -36,8 +36,16 @@ class IonChain:
     def current_detuning_rad(self):
         return 2 * np.pi * (self.laser_freq - self.RESONANCE_HZ)
 
-    def reset_to_ground(self) -> None:
-        self.psi = qt.tensor([qt.basis(2, 0)] * self.N_IONS)
+    def reset_ion(self, ion_index: int) -> None:
+        """Optical-pump ion `ion_index` to |0>, in place on psi.
+        Valid ONLY when that ion is separable (post-measurement, or a single-ion cooling
+        target) — never call on an entangled, unmeasured ion."""
+        proj0 = self._single_ion_op(qt.basis(2, 0) * qt.basis(2, 0).dag(), ion_index)  # |0><0|_i
+        new = proj0 * self.psi
+        if new.norm() > 1e-9:
+            self.psi = new.unit()
+        else:                               # ion was in |1> → flip down
+            self.psi = self._single_ion_op(qt.sigmax(), ion_index) * self.psi
 
     def apply_rotation(self, ion_index: int, theta: float, phi: float) -> None:
         c, s = np.cos(theta/2), np.sin(theta/2)

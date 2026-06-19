@@ -2,7 +2,7 @@ from artiq.experiment import kernel, delay, ms, us
 from artiq.language.types import TInt32, TFloat, TNone
 import numpy as np
 
-from config import RESONANCE_HZ, SECULAR_FREQ, OMEGA_RABI, ETA
+from config import RESONANCE_HZ, SECULAR_FREQ, OMEGA_RABI, ETA, COOLING_ZONE
 
 class CoolingService:
 
@@ -23,6 +23,7 @@ class CoolingService:
 
     @kernel
     def optical_pump(self) -> TNone:
+        self._laser_397_pump.set_target_zone(COOLING_ZONE)
         self._laser_397_pump.pulse(500*us)
 
     def sideband_cool(self, n_cycles: TInt32, duration: TFloat) -> TNone:
