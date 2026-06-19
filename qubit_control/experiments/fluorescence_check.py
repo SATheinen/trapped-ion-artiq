@@ -73,12 +73,12 @@ class FluorescenceCheck(EnvExperiment):
 
     @kernel
     def measure_bright(self, shot: TInt32):
-        count = self.detection.count(ion_index=0, duration=self.duration)
+        count = self.detection.count(ion_index=1, duration=self.duration)
         self.mutate_dataset("bright_fluorescence_count", shot, count) # Dataset name, index, value
 
     @kernel
     def measure_dark(self, shot: TInt32):
-        count = self.detection.count(ion_index=0, duration=self.duration)
+        count = self.detection.count(ion_index=1, duration=self.duration)
         self.mutate_dataset("dark_fluorescence_count", shot, count) # Dataset name, index, value
     
     def analyze(self):
