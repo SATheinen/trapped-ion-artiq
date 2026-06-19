@@ -37,7 +37,7 @@ class RotateIsolatedCheck(EnvExperiment):
         self.readout.build(self.detection, self.laser_397_pump, self.trap_dc)
 
         self.qec = QECService()
-        self.build(self.shuttling, self.cooling, self.laser_729, self.readout, self.trap_dc)
+        self.qec.build(self.shuttling, self.cooling, self.laser_729, self.readout, self.trap_dc)
 
     def run(self):
         from sim.ion_chain import ion
