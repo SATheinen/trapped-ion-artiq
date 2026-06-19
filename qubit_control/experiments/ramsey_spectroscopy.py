@@ -69,7 +69,7 @@ class RamseySpectroscopy(EnvExperiment):
         self.laser_729.pulse((np.pi / 2) / OMEGA_RABI)
         delay(T)
         self.laser_729.pulse((np.pi / 2) / OMEGA_RABI)
-        counts = self.detection.count(ion_index=0, duration=self.measure_duration)
+        counts = self.detection.count(ion_index=1, duration=self.measure_duration)
         return counts
 
     def analyze(self):

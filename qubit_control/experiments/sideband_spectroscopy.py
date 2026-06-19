@@ -70,7 +70,7 @@ class SidebandSpectroscopy(EnvExperiment):
 
         self.laser_729.set_frequency(self.RESONANCE_HZ + self.freq_scan[index])
         self.laser_729.pulse(duration=self.probe_duration)
-        counts = self.detection.count(ion_index=0, duration=self.measure_duration)
+        counts = self.detection.count(ion_index=1, duration=self.measure_duration)
 
         return counts
 
