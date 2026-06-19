@@ -7,10 +7,10 @@ zero, one = qt.basis(2, 0), qt.basis(2, 1)
 
 def cnot(c, t):                                   # decomposition under test (signs TBD by the test)
     ion.apply_rotation(c, -np.pi/2, np.pi/2)      # Ry_c(−π/2)
-    ion.apply_rotation(t,  -np.pi/2, 0.0)         # Rx_t(−π/2)
+    ion.apply_rotation(t, np.pi/2, 0.0)         # Rx_t(π/2)
     ion.apply_rotation(c, -np.pi/2, 0.0)          # Rx_c(−π/2)
     ion.apply_ms_gate(MS_GATE_TIME)               # XX(π/4)
-    ion.apply_rotation(c,  np.pi/2, np.pi/2)      # Ry_c(+π/2)
+    ion.apply_rotation(c, np.pi/2, np.pi/2)      # Ry_c(+π/2)
 
 class CNOTCheck(EnvExperiment):
     def build(self):
