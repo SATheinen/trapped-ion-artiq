@@ -68,7 +68,7 @@ class SidebandCooling(EnvExperiment):
     def measure(self, frequency):
         self.laser_729.set_frequency(frequency)
         self.laser_729.pulse(self.bsb_pi_time)
-        return self.detection.count(ion_index=0, duration=self.measure_duration)
+        return self.detection.count(ion_index=1, duration=self.measure_duration)
 
     def analyze(self):
         rsb_counts = self.get_dataset("rsb_counts")
