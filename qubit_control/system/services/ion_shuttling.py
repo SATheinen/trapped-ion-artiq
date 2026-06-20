@@ -6,18 +6,17 @@ import numpy as np
 
 class ShuttlingService:
 
-    def _replay(self, ops):
+    def _replay(self, start, ops):
+        live = [int(z) for z in self._trap_dc._positions]
+        assert live == list(start), f"register {live} != compiled start {list(start)}"
         for op in ops:
-            if op[0] == "transport":
-                self.transport(op[1], op[2])
-            elif op[0] == "swap":
-                self.swap(op[1], op[2])
-            else:
-                raise ValueError(f"replay: unknown op {op[0]}")
+            if op[0] == "transport": self.transport(op[1], op[2])
+            elif op[0] == "swap":    self.swap(op[1], op[2])
+            else: raise ValueError(f"replay: unknown op {op[0]}")
 
-    def route_for_cnot(self, c, t): self._replay(ROUTE_FOR_CNOT[(c, t)])
-    def route_to_readout(self, anc): self._replay(ROUTE_TO_READOUT[anc])
-    def route_to_gate(self, ion): self._replay(ROUTE_TO_GATE[ion])
+    def route_for_cnot(self, c, t):  s, ops = ROUTE_FOR_CNOT[(c, t)]; self._replay(s, ops)
+    def route_to_readout(self, anc): s, ops = ROUTE_TO_READOUT[anc];  self._replay(s, ops)
+    def route_to_gate(self, ion):    s, ops = ROUTE_TO_GATE[ion];     self._replay(s, ops)
 
     def build(self, trap_dc, cooling):
         self._trap_dc = trap_dc

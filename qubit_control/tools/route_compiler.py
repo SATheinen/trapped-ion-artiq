@@ -117,6 +117,7 @@ print("initial      ", show(pos))
 total_swaps = total_transports = 0
 for k, (c, t) in enumerate(CNOTS, 1):
     goal = (lambda c,t: (lambda s: s[c]==GATE and s[t]==GATE-1 and occ(s,GATE+1) < 0))(c,t)
+    start = pos
     ops, pos2 = route(pos, goal)
     if ops is None:
         print(f"CNOT{k} ({NAMES[c]}->? ctrl/tgt): ROUTING IMPOSSIBLE")
@@ -124,7 +125,7 @@ for k, (c, t) in enumerate(CNOTS, 1):
     ns = sum(1 for o in ops if o[0]=="swap")
     nt = sum(1 for o in ops if o[0]=="transport")
     replay = [(o[0], o[1], o[3]) if o[0]=="transport" else o for o in ops]
-    ROUTE_FOR_CNOT[(c, t)] = replay
+    ROUTE_FOR_CNOT[(c, t)] = (start, replay)
     total_swaps += ns
     total_transports += nt
     print(f"\nCNOT{k}: gate ctrl={NAMES[c]} tgt={NAMES[t]}   route: {ns} swaps, {nt} transports")
@@ -142,12 +143,13 @@ print(f"\n=== Phase B: route each ancilla to READOUT_ZONE={READOUT_ZONE} (no-pas
 # continue from the post-CNOT4 chain
 for anc in ANCILLA_IONS:  # A0=ion1, A1=ion3
     goal = (lambda a: (lambda s: s[a]==READOUT_ZONE))(anc)
+    start = pos
     ops, pos2 = route(pos, goal)
     if ops is None:
         print(f"  {NAMES[anc]} -> readout: IMPOSSIBLE"); continue
     ns = sum(1 for o in ops if o[0]=="swap"); nt = sum(1 for o in ops if o[0]=="transport")
     replay = [(o[0], o[1], o[3]) if o[0]=="transport" else o for o in ops]
-    ROUTE_TO_READOUT[anc] = replay
+    ROUTE_TO_READOUT[anc] = (start, replay)
     print(f"\n  {NAMES[anc]} -> readout: {ns} swaps, {nt} transports")
     for o in ops:
         if o[0]=="transport": print(f"     transport {NAMES[o[1]]}: {o[2]}->{o[3]}")
@@ -159,14 +161,15 @@ print("\n=== 4d/5 correction: route each flagged DATA ion to the gate (+free nei
 # worst case: start from the post-extraction chain
 for data in DATA_IONS:  # D0, D1, D2
     goal = (lambda d: (lambda s: s[d]==GATE and any(occ(s,n)<0 for n in ADJACENCY[GATE])))(data)
+    start = pos
     ops, pos2 = route(pos, goal)
     if ops is None:
         print(f"  correct {NAMES[data]}: IMPOSSIBLE"); continue
     ns = sum(1 for o in ops if o[0]=="swap"); nt = sum(1 for o in ops if o[0]=="transport")
     replay = [(o[0], o[1], o[3]) if o[0]=="transport" else o for o in ops]
-    ROUTE_TO_GATE[data] = replay
+    ROUTE_TO_GATE[data] = (start, replay)
     print(f"  correct {NAMES[data]}: {ns} swaps, {nt} transports -> {show(pos2)}")
 
-print(f"Route for cnot: {ROUTE_FOR_CNOT}")
-print(f"Route to gate: {ROUTE_TO_GATE}")
-print(f"Route to readout: {ROUTE_TO_READOUT}")
+print(f"ROUTE_FOR_CNOT = {ROUTE_FOR_CNOT}")
+print(f"ROUTE_TO_GATE = {ROUTE_TO_GATE}")
+print(f"ROUTE_TO_READOUT = {ROUTE_TO_READOUT}")
