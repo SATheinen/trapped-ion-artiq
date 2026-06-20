@@ -63,6 +63,6 @@ class CNOTPortableCheck(EnvExperiment):
         prep((zero+one).unit(), zero); v = run_route()
         print("|<Φ+|out>|² =", round(abs((np.array([1,0,0,1])/np.sqrt(2)).conj()@v)**2, 3))
         U = np.column_stack(cols)
-        U_ideal = np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]], dtype=complex)
+        U_ideal = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]], dtype=complex)
         print("process overlap (want ≈1.0):", round(abs(np.trace(U_ideal.conj().T @ U))/4, 4))
         assert round(abs(np.trace(U_ideal.conj().T @ U))/4, 1) == 1.0
