@@ -1,9 +1,23 @@
 from artiq.experiment import kernel, delay, ms, us
 from artiq.language.types import TInt32, TFloat, TNone
 from config import ADJACENCY
+from config.compiled_routes import ROUTE_FOR_CNOT, ROUTE_TO_READOUT, ROUTE_TO_GATE
 import numpy as np
 
 class ShuttlingService:
+
+    def _replay(self, ops):
+        for op in ops:
+            if op[0] == "transport":
+                self.transport(op[1], op[2])
+            elif op[0] == "swap":
+                self.swap(op[1], op[2])
+            else:
+                raise ValueError(f"replay: unknown op {op[0]}")
+
+    def route_for_cnot(self, c, t): self._replay(ROUTE_FOR_CNOT[(c, t)])
+    def route_to_readout(self, anc): self._replay(ROUTE_TO_READOUT[anc])
+    def route_to_gate(self, ion): self._replay(ROUTE_TO_GATE[ion])
 
     def build(self, trap_dc, cooling):
         self._trap_dc = trap_dc
