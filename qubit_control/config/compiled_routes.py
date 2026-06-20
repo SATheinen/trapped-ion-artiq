@@ -1,0 +1,3 @@
+ROUTE_FOR_CNOT: {(0, 1): [('transport', 0, 1), ('transport', 1, 2), ('transport', 2, 3), ('swap', 0, 1), ('swap', 0, 2), ('swap', 1, 2)], (2, 1): [('swap', 0, 1), ('swap', 0, 2), ('swap', 1, 2)], (2, 3): [('transport', 0, 0), ('transport', 1, 1), ('transport', 2, 2), ('transport', 3, 3), ('swap', 2, 3)], (4, 3): [('transport', 2, 5), ('swap', 2, 4), ('transport', 4, 3)]}
+ROUTE_TO_GATE: {0: [('swap', 0, 4), ('transport', 0, 3)], 2: [('transport', 2, 3)], 4: [('transport', 4, 3)]}
+ROUTE_TO_READOUT: {1: [('swap', 1, 3), ('swap', 1, 4), ('transport', 1, 5), ('swap', 1, 2)], 3: [('swap', 3, 4), ('transport', 3, 4), ('swap', 2, 3), ('swap', 1, 3)]}

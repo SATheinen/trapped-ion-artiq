@@ -138,7 +138,7 @@ for k, (c, t) in enumerate(CNOTS, 1):
     pos = pos3
 print(f"\nTOTAL routing cost: {total_swaps} swaps, {total_transports} transports")
 
-print("\n=== Phase B: route each ancilla to READOUT_ZONE=6 (no-passing) ===")
+print(f"\n=== Phase B: route each ancilla to READOUT_ZONE={READOUT_ZONE} (no-passing) ===")
 # continue from the post-CNOT4 chain
 for anc in ANCILLA_IONS:  # A0=ion1, A1=ion3
     goal = (lambda a: (lambda s: s[a]==READOUT_ZONE))(anc)
@@ -166,3 +166,7 @@ for data in DATA_IONS:  # D0, D1, D2
     replay = [(o[0], o[1], o[3]) if o[0]=="transport" else o for o in ops]
     ROUTE_TO_GATE[data] = replay
     print(f"  correct {NAMES[data]}: {ns} swaps, {nt} transports -> {show(pos2)}")
+
+print(f"Route for cnot: {ROUTE_FOR_CNOT}")
+print(f"Route to gate: {ROUTE_TO_GATE}")
+print(f"Route to readout: {ROUTE_TO_READOUT}")
