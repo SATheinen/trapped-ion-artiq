@@ -72,7 +72,15 @@ class QecZCheck(EnvExperiment):
         print("OK repetition-code: syndrome stable over shots; logical |0>_L preserved")
 
     def analyze(self):
-        plt.rcParams.update({ ... })            # the real rcParams block from rabi_flop
+        plt.rcParams.update({
+            "font.family": "DejaVu Sans",
+            "font.size": 11,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.labelsize": 12,
+            "xtick.direction": "in",
+            "ytick.direction": "in",
+        })
         S0_C, S1_C, THR_C = "#2b6cb0", "#2f855a", "#888888"
         fig, ax = plt.subplots(figsize=(8.5, 4.8))
         g = np.arange(4); off = 0.17
