@@ -1,5 +1,6 @@
 import numpy as np
-from config import ADJACENCY, RESONANCE_HZ, OMEGA_RABI, SECULAR_FREQ, MS_GATE_TIME, MS_AMPLITUDE, MS_SUM_PHASE
+from config import (ADJACENCY, RESONANCE_HZ, OMEGA_RABI, SECULAR_FREQ,
+                    MS_GATE_TIME, MS_AMPLITUDE, MS_SUM_PHASE, ANCILLA_IONS)
 
 class QECService:
     def build(self, shuttling, cooling, laser_729, readout, trap_dc):
@@ -48,3 +49,17 @@ class QECService:
             raise RuntimeError("cnot: no empty neighbour to split into")
 
         self._rotate_isolated(c, np.pi/2, np.pi/2) # Ry_c(+π/2)
+
+    def extract_syndrome(self, measure_duration):
+        CNOTS = [(0, 1), (2, 1), (2, 3), (4, 3)]
+        for c, t in CNOTS:
+            self._shuttling.route_for_cnot(c, t)
+            self.cnot(c, t)
+        a0, a1 = ANCILLA_IONS
+        self._shuttling.route_to_readout(a0)
+        s0 = self._readout.measure_and_reset(a0, measure_duration)
+        self._shuttling.route_to_readout(a1)
+        s1 = self._readout.measure_and_reset(a1, measure_duration)
+        return s0, s1
+    
+    

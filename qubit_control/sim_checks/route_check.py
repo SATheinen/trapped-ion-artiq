@@ -11,7 +11,7 @@ from system.services.qec import QECService
 from config import N_IONS, INTERACTION_ZONE, INITIAL_POSITIONS
 import numpy as np
 
-class CNOTPortableCheck(EnvExperiment):
+class RouteCheck(EnvExperiment):
       
     def build(self):
         self.setattr_device("core")
@@ -61,7 +61,6 @@ class CNOTPortableCheck(EnvExperiment):
                 prep(qt.basis(2,bc), qt.basis(2,bt)); v = run_route()
                 print(bc, bt, "->", np.round(np.abs(v)**2, 2)); cols.append(v)
         prep((zero+one).unit(), zero); v = run_route()
-        print("|<Φ+|out>|² =", round(abs((np.array([1,0,0,1])/np.sqrt(2)).conj()@v)**2, 3))
         U = np.column_stack(cols)
         U_ideal = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]], dtype=complex)
         print("process overlap (want ≈1.0):", round(abs(np.trace(U_ideal.conj().T @ U))/4, 4))
