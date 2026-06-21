@@ -177,8 +177,13 @@ for d in DATA_IONS:
     ROUTE_LOGICAL[d] = (lpos, [(o[0],o[1],o[3]) if o[0]=="transport" else o for o in ops])    
     lpos = lpos2
 
+home_ops, home_end = route(lpos, lambda s: s == tuple(INITIAL_POSITIONS))
+assert home_ops is not None and home_end == tuple(INITIAL_POSITIONS), "no route home"
+ROUTE_HOME = (lpos, [(o[0],o[1],o[3]) if o[0]=="transport" else o for o in home_ops])
+
 print(f"ROUTE_FOR_CNOT = {ROUTE_FOR_CNOT}")
 print(f"ROUTE_CORRECT = {ROUTE_CORRECT}")
 print(f"ROUTE_TO_READOUT = {ROUTE_TO_READOUT}")
 print(f"ROUTE_INJECT = {ROUTE_INJECT}")
 print(f"ROUTE_LOGICAL = {ROUTE_LOGICAL}")
+print(f"ROUTE_HOME = {ROUTE_HOME}")
