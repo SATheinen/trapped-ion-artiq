@@ -105,4 +105,4 @@ class QecZCheck(EnvExperiment):
                 "below threshold = dark = $|1\\rangle$ = syndrome bit 1",
                 transform=ax.transAxes, ha="left", va="top", fontsize=9,
                 bbox=dict(boxstyle="round,pad=0.4", facecolor="white", edgecolor="#bbb", alpha=0.92))
-        fig.tight_layout(); fig.savefig("qec_x_check.pdf", bbox_inches="tight"); plt.close(fig)
+        fig.tight_layout(); fig.savefig("qec_x_check.pdf"); plt.close(fig)
