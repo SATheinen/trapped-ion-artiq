@@ -96,4 +96,4 @@ class QecZCheck(EnvExperiment):
                 transform=ax.transAxes, ha="left", va="top", fontsize=9,
                 bbox=dict(boxstyle="round,pad=0.4", facecolor="white", edgecolor="#bbb", alpha=0.92))
         fig.tight_layout()
-        fig.savefig("repetition_code.pdf", bbox_inches="tight"); plt.close(fig)
+        fig.savefig("qec_z_check.pdf", bbox_inches="tight"); plt.close(fig)
