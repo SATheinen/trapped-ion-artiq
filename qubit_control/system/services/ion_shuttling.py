@@ -1,7 +1,7 @@
 from artiq.experiment import kernel, delay, ms, us
 from artiq.language.types import TInt32, TFloat, TNone
 from config import ADJACENCY
-from config.compiled_routes import ROUTE_FOR_CNOT, ROUTE_TO_READOUT, ROUTE_TO_GATE
+from config.compiled_routes import ROUTE_FOR_CNOT, ROUTE_TO_READOUT, ROUTE_INJECT, ROUTE_CORRECT, ROUTE_LOGICAL
 import numpy as np
 
 class ShuttlingService:
@@ -14,9 +14,13 @@ class ShuttlingService:
             elif op[0] == "swap":    self.swap(op[1], op[2])
             else: raise ValueError(f"replay: unknown op {op[0]}")
 
-    def route_for_cnot(self, c, t):  s, ops = ROUTE_FOR_CNOT[(c, t)]; self._replay(s, ops)
-    def route_to_readout(self, anc): s, ops = ROUTE_TO_READOUT[anc];  self._replay(s, ops)
-    def route_to_gate(self, ion):    s, ops = ROUTE_TO_GATE[ion];     self._replay(s, ops)
+    def route_for_cnot(self, c, t): s, ops = ROUTE_FOR_CNOT[(c, t)]; self._replay(s, ops)
+    def route_to_readout(self, anc): s, ops = ROUTE_TO_READOUT[anc]; self._replay(s, ops)
+    def route_inject_to(self, d): s, ops = ROUTE_INJECT[d][0]; self._replay(s, ops)
+    def route_inject_back(self, d): s, ops = ROUTE_INJECT[d][1]; self._replay(s, ops)
+    def route_correct_to(self, d): s, ops = ROUTE_CORRECT[d][0]; self._replay(s, ops)
+    def route_correct_back(self, d): s, ops = ROUTE_CORRECT[d][1]; self._replay(s, ops)
+    def route_logical(self, d): s, ops = ROUTE_LOGICAL[d]; self._replay(s, ops)
 
     def build(self, trap_dc, cooling):
         self._trap_dc = trap_dc

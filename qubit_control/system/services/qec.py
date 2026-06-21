@@ -70,8 +70,22 @@ class QECService:
         return {(0,0): None, (1,0): D0, (1,1): D1, (0,1): D2}[(s0, s1)]
     
     def correct(self, s0, s1):
-        flagged = self.decode(s0, s1)
-        if flagged is not None:
-            self._shuttling.route_to_gate(flagged)
-            self._rotate_isolated(flagged, np.pi, 0.0)
-        return flagged
+      flagged = self.decode(s0, s1)
+      if flagged is not None:
+          self._shuttling.route_correct_to(flagged)
+          self._rotate_isolated(flagged, np.pi, 0.0)
+          self._shuttling.route_correct_back(flagged)
+      return flagged
+    
+    def inject_x(self, d):
+        self._shuttling.route_inject_to(d)
+        self._rotate_isolated(d, np.pi, 0.0)
+        self._shuttling.route_inject_back(d)
+
+    def logical_readout(self, measure_duration):
+        bits = [self._route_and_measure(d, measure_duration) for d in DATA_IONS]
+        return 1 if sum(bits) >= 2 else 0
+    
+    def _route_and_measure(self, d, duration):
+        self._shuttling.route_logical(d)
+        return self._readout.measure_and_reset(d, duration)
