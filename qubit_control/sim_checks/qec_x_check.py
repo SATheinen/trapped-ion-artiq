@@ -45,7 +45,7 @@ class QecZCheck(EnvExperiment):
         import qutip as qt
         ion.dephasing_on = False
         np.random.seed(445538)
-        measure_duration = 3e-3
+        self.measure_duration = 3e-3
         n_shots = 40
         self._c0 = [[] for _ in range(4)]       # A0 read counts (s0), per scenario
         self._c1 = [[] for _ in range(4)]       # A1 read counts (s1), per scenario
@@ -61,10 +61,10 @@ class QecZCheck(EnvExperiment):
             for _ in range(n_shots):
                 if err is not None:
                     self.qec.inject_x(err)
-                s0, s1  = self.qec.extract_syndrome(measure_duration)
+                s0, s1  = self.qec.extract_syndrome(self.measure_duration)
                 c0, c1  = self.qec.last_syndrome_counts
                 flagged = self.qec.correct(s0, s1)
-                logical = self.qec.logical_readout(measure_duration)
+                logical = self.qec.logical_readout(self.measure_duration)
                 self.shuttling.route_home()
                 self._c0[k].append(c0); self._c1[k].append(c1)
                 assert (s0, s1) == exp_syn and flagged == exp_flag and logical == 0
@@ -91,7 +91,7 @@ class QecZCheck(EnvExperiment):
                 x = g[k] + dx + (rng.random(len(counts)) - 0.5) * 0.13      # horizontal jitter
                 ax.scatter(x, counts, s=14, color=color, alpha=0.45, edgecolors="none",
                             label=(lbl if k == 0 else None))
-        thr = (N_BRIGHT + N_DARK) / 2 * self._dur * 1e3
+        thr = (N_BRIGHT + N_DARK) / 2 * self.measure_duration * 1e3
         ax.axhline(thr, color=THR_C, ls="--", lw=1.0)
         ax.text(3.46, thr, " discrimination threshold", color=THR_C, va="bottom", ha="right", fontsize=8)
 
