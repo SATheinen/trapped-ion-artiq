@@ -74,5 +74,4 @@ class QECService:
         if flagged is not None:
             self._shuttling.route_to_gate(flagged)
             self._rotate_isolated(flagged, np.pi, 0.0)
-            corrected = flagged
-        return corrected
+        return flagged
