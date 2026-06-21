@@ -110,6 +110,17 @@ def show(pos):
         row[p] = NAMES[i]
     return "[" + " ".join(row) + "]"
 
+def roundtrip_to_gate(start_pos, d):
+    start = tuple(start_pos)
+    to_goal = lambda s: s[d] == GATE and any(occ(s, n) < 0 for n in ADJACENCY[GATE])
+    to_ops, mid = route(start, to_goal)
+    assert to_ops is not None, f"no route to gate for ion {d} from {start}"
+    back_ops, end = route(mid, lambda s: s == start)
+    assert back_ops is not None and end == start, f"no back-route to {start} for ion {d}"
+    fwd = [(o[0], o[1], o[3]) if o[0]=="transport" else o for o in to_ops]
+    bwd  = [(o[0], o[1], o[3]) if o[0]=="transport" else o for o in back_ops]
+    return ((start, fwd), (mid, bwd))     # ((to-start, to-ops), (mid-start, back-ops))
+
 # ---- run the full round ----
 pos = tuple(INITIAL_POSITIONS)  # D0,A0,D1,A1,D2
 CNOTS = [(0,1),(2,1),(2,3),(4,3)]
@@ -156,6 +167,17 @@ for anc in ANCILLA_IONS:  # A0=ion1, A1=ion3
         else: print(f"     swap {NAMES[o[1]]}<->{NAMES[o[2]]}")
     print("     ", show(pos2))
     pos = pos2  # measure+reset doesn't move ions
+post_ext = pos
+ROUTE_INJECT = {d: roundtrip_to_gate(INITIAL_POSITIONS, d) for d in DATA_IONS}
+ROUTE_CORRECT = {d: roundtrip_to_gate(post_ext, d) for d in DATA_IONS}
+
+ROUTE_LOGICAL = {}
+lpos = post_ext
+for d in DATA_IONS:
+    ops, lpos2 = route(lpos, (lambda d: (lambda s: s[d] == READOUT_ZONE))(d))
+    assert ops is not None, f"no logical-readout route for data {d}"
+    ROUTE_LOGICAL[d] = (lpos, [(o[0],o[1],o[3]) if o[0]=="transport" else o for o in ops])    
+    lpos = lpos2
 
 print("\n=== 4d/5 correction: route each flagged DATA ion to the gate (+free neighbour to clear) ===")
 # worst case: start from the post-extraction chain
@@ -167,9 +189,11 @@ for data in DATA_IONS:  # D0, D1, D2
         print(f"  correct {NAMES[data]}: IMPOSSIBLE"); continue
     ns = sum(1 for o in ops if o[0]=="swap"); nt = sum(1 for o in ops if o[0]=="transport")
     replay = [(o[0], o[1], o[3]) if o[0]=="transport" else o for o in ops]
-    ROUTE_TO_GATE[data] = (start, replay)
+    ROUTE_CORRECT[data] = (start, replay)
     print(f"  correct {NAMES[data]}: {ns} swaps, {nt} transports -> {show(pos2)}")
 
 print(f"ROUTE_FOR_CNOT = {ROUTE_FOR_CNOT}")
-print(f"ROUTE_TO_GATE = {ROUTE_TO_GATE}")
+print(f"ROUTE_CORRECT = {ROUTE_CORRECT}")
 print(f"ROUTE_TO_READOUT = {ROUTE_TO_READOUT}")
+print(f"ROUTE_INJECT = {ROUTE_INJECT}")
+print(f"ROUTE_LOGICAL = {ROUTE_LOGICAL}")
