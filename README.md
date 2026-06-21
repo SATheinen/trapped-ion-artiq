@@ -60,11 +60,19 @@ Solves for the time-dependent electrode voltages that move the trap minimum smoo
 
 ### Mølmer–Sørensen gate — `ms_gate.py`
 
-Two-ion entangling gate via simultaneous red/blue sideband drive detuned from the secular frequency. A parity scan over the analysis-pulse phase verifies Bell-state preparation.
+Two-ion entangling gate via simultaneous red/blue sideband drive detuned from the secular frequency.
 
 ![MS gate](docs/ms_gate.png)
 
 [Full PDF →](docs/ms_gate.pdf)
+
+### Quantum error correction - `qec_x_check.py`
+
+Error correction for bitflips occuring in a logical qubit consisting of 3 real qubits. The error is introduced artificially by flipping one qubit and then corrected.
+
+![QEC](doc/qec_x_check.png)
+
+[Full PDF →](docs/qec_x_check.pdf)
 
 ## Installation
 
