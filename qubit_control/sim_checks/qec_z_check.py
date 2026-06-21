@@ -69,7 +69,15 @@ class QecZCheck(EnvExperiment):
         print("OK repetition-code: every injected X detected, localized, corrected; logical |0>_L preserved")
 
     def analyze(self):
-        plt.rcParams.update({ ... })
+        plt.rcParams.update({
+            "font.family": "DejaVu Sans",
+            "font.size": 11,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.labelsize": 12,
+            "xtick.direction": "in",
+            "ytick.direction": "in",
+        })        
         S0_C, S1_C, ACCENT = "#2b6cb0", "#2f855a", "#c53030"
         fig, ax = plt.subplots(figsize=(8.5, 4.8))
         g = np.arange(4); w = 0.30
