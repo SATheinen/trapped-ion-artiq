@@ -12,6 +12,7 @@ class ReadoutService:
         if z != READOUT_ZONE:
             raise ValueError(f"measure_and_reset: ion {ion_index} at zone {z}, not READOUT_ZONE")
         count = self._detection.count(ion_index, duration) # MEASURE first (collapses ion)
+        self.last_count = count
         threshold = (N_BRIGHT + N_DARK) / 2 * duration * 1e3       # counts = rate(/ms) · duration(s) · 1e3
         bit = 1 if count < threshold else 0
         self._pump.set_target_zone(READOUT_ZONE) # THEN reset
