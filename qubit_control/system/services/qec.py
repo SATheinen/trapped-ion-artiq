@@ -61,8 +61,11 @@ class QECService:
         a0, a1 = ANCILLA_IONS
         self._shuttling.route_to_readout(a0)
         s0 = self._readout.measure_and_reset(a0, measure_duration)
+        c0 = self._readout.last_count
         self._shuttling.route_to_readout(a1)
         s1 = self._readout.measure_and_reset(a1, measure_duration)
+        c1 = self._readout.last_count
+        self.last_syndrome_counts = (c0, c1)
         return s0, s1
     
     def decode(self, s0, s1):
