@@ -177,19 +177,6 @@ for d in DATA_IONS:
     ROUTE_LOGICAL[d] = (lpos, [(o[0],o[1],o[3]) if o[0]=="transport" else o for o in ops])    
     lpos = lpos2
 
-print("\n=== 4d/5 correction: route each flagged DATA ion to the gate (+free neighbour to clear) ===")
-# worst case: start from the post-extraction chain
-for data in DATA_IONS:  # D0, D1, D2
-    goal = (lambda d: (lambda s: s[d]==GATE and any(occ(s,n)<0 for n in ADJACENCY[GATE])))(data)
-    start = pos
-    ops, pos2 = route(pos, goal)
-    if ops is None:
-        print(f"  correct {NAMES[data]}: IMPOSSIBLE"); continue
-    ns = sum(1 for o in ops if o[0]=="swap"); nt = sum(1 for o in ops if o[0]=="transport")
-    replay = [(o[0], o[1], o[3]) if o[0]=="transport" else o for o in ops]
-    ROUTE_CORRECT[data] = (start, replay)
-    print(f"  correct {NAMES[data]}: {ns} swaps, {nt} transports -> {show(pos2)}")
-
 print(f"ROUTE_FOR_CNOT = {ROUTE_FOR_CNOT}")
 print(f"ROUTE_CORRECT = {ROUTE_CORRECT}")
 print(f"ROUTE_TO_READOUT = {ROUTE_TO_READOUT}")
