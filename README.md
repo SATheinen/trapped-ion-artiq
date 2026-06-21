@@ -70,7 +70,7 @@ Two-ion entangling gate via simultaneous red/blue sideband drive detuned from th
 
 Error correction for bitflips occuring in a logical qubit consisting of 3 real qubits. The error is introduced artificially by flipping one qubit, then detected with ancilla qubits and finally corrected.
 
-![QEC](doc/qec_x_check.png)
+![QEC](docs/qec_x_check.png)
 
 [Full PDF →](docs/qec_x_check.pdf)
 
