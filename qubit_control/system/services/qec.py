@@ -1,11 +1,14 @@
 import numpy as np
 from config import (ADJACENCY, RESONANCE_HZ, OMEGA_RABI, SECULAR_FREQ,
-                    MS_GATE_TIME, MS_AMPLITUDE, MS_SUM_PHASE, ANCILLA_IONS)
+                    MS_GATE_TIME, MS_AMPLITUDE, MS_SUM_PHASE, ANCILLA_IONS,
+                    DATA_IONS)
 
 class QECService:
     def build(self, shuttling, cooling, laser_729, readout, trap_dc):
         self._shuttling = shuttling; self._cooling = cooling
-        self._729 = laser_729; self._readout = readout; self._trap_dc = trap_dc
+        self._729 = laser_729
+        self._readout = readout
+        self._trap_dc = trap_dc
         self.core = trap_dc.core
         self.gate = trap_dc.interaction_zone
 
@@ -62,4 +65,14 @@ class QECService:
         s1 = self._readout.measure_and_reset(a1, measure_duration)
         return s0, s1
     
+    def decode(self, s0, s1):
+        D0, D1, D2 = DATA_IONS
+        return {(0,0): None, (1,0): D0, (1,1): D1, (0,1): D2}[(s0, s1)]
     
+    def correct(self, s0, s1):
+        flagged = self.decode(s0, s1)
+        if flagged is not None:
+            self._shuttling.route_to_gate(flagged)
+            self._rotate_isolated(flagged, np.pi, 0.0)
+            corrected = flagged
+        return corrected
