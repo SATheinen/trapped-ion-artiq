@@ -4,7 +4,7 @@ A trapped-ion quantum control stack built on [ARTIQ](https://m-labs.hk/artiq/), 
 
 ## Demonstrated experiments
 
-Seven trapped-ion experiments, each runnable end-to-end against the simulator with `artiq_run`. The figure under each entry is the output of that experiment's own `analyze()` method; the full vector PDF is linked alongside.
+Nine trapped-ion experiments, each runnable end-to-end against the simulator with `artiq_run`. The figure under each entry is the output of that experiment's own `analyze()` method; the full vector PDF is linked alongside.
 
 ### Fluorescence check — `fluorescence_check.py`
 
@@ -16,6 +16,8 @@ Carrier Rabi oscillation on the qubit transition. Fits Ω_Rabi and t_π from the
 
 ![Rabi flop](docs/rabi_flop.png)
 
+*Plot produced by `qubit_control/experiments/rabi_flop.py`.*
+
 [Full PDF →](docs/rabi_flop.pdf)
 
 ### Ramsey spectroscopy — `ramsey_spectroscopy.py`
@@ -23,6 +25,8 @@ Carrier Rabi oscillation on the qubit transition. Fits Ω_Rabi and t_π from the
 Two π/2 pulses bracketing a variable free-evolution interval. Reveals coherent phase accumulation at the laser–resonance detuning and exponential T₂* decay of the fringe contrast.
 
 ![Ramsey spectroscopy](docs/ramsey_spectroscopy.png)
+
+*Plot produced by `qubit_control/experiments/ramsey_spectroscopy.py`.*
 
 [Full PDF →](docs/ramsey_spectroscopy.pdf)
 
@@ -32,6 +36,8 @@ Frequency scan across the carrier showing red and blue motional sidebands at ±�
 
 ![Sideband spectroscopy](docs/sideband_spectroscopy.png)
 
+*Plot produced by `qubit_control/experiments/sideband_spectroscopy.py`.*
+
 [Full PDF →](docs/sideband_spectroscopy.pdf)
 
 ### Sideband cooling — `sideband_cooling.py`
@@ -39,6 +45,8 @@ Frequency scan across the carrier showing red and blue motional sidebands at ±�
 Resolved-sideband cooling on the red sideband, interleaved with optical pumping. Tracks n̄ from its Doppler-cooled starting value down toward the motional ground state.
 
 ![Sideband cooling](docs/sideband_cooling.png)
+
+*Plot produced by `qubit_control/experiments/sideband_cooling.py`.*
 
 [Full PDF →](docs/sideband_cooling.pdf)
 
@@ -48,6 +56,8 @@ Multi-zone ion transport across a segmented trap. Routes and per-route heating a
 
 ![Shuttling](docs/shuttling.png)
 
+*Plot produced by `qubit_control/experiments/shuttling.py`.*
+
 [Full PDF →](docs/shuttling.pdf)
 
 ### Waveform generation — `sim/waveform_gen.py`
@@ -55,6 +65,8 @@ Multi-zone ion transport across a segmented trap. Routes and per-route heating a
 Solves for the time-dependent electrode voltages that move the trap minimum smoothly between zones in a 7-electrode / 5-zone linear segmented Paul trap. Each electrode contributes a Gaussian basis function `φ_i(z)`, and the per-frame voltage vector is found by a Tikhonov-regularized least-squares fit to three constraints at the desired well position: `U(z₀) = 0`, `U'(z₀) = 0`, `U''(z₀) = m·ω²/e`. The trajectory `z₀(t)` is a minimum-jerk quintic (continuous velocity and acceleration at both endpoints) to avoid impulsive kicks. Running the module sweeps all 20 routes defined in `routes.yaml` and writes one `.npy` per route into `config/waveforms/`, which the `TrapDCModule` then plays back through `Zotino`-style `set_dac` calls inside an `@kernel` loop.
 
 ![Waveform Z0 → Z4](docs/waveform_z0_to_z4.png)
+
+*Plot produced by `qubit_control/sim/waveform_gen.py`.*
 
 [Full PDF →](docs/waveform_z0_to_z4.pdf)
 
@@ -64,6 +76,8 @@ Two-ion entangling gate via simultaneous red/blue sideband drive detuned from th
 
 ![MS gate](docs/ms_gate.png)
 
+*Plot produced by `qubit_control/experiments/ms_gate.py`.*
+
 [Full PDF →](docs/ms_gate.pdf)
 
 ### Quantum error correction - `qec_x_check.py`
@@ -71,6 +85,8 @@ Two-ion entangling gate via simultaneous red/blue sideband drive detuned from th
 Error correction for bitflips occuring in a logical qubit consisting of 3 real qubits. The error is introduced artificially by flipping one qubit, then detected with ancilla qubits and finally corrected.
 
 ![QEC](docs/qec_x_check.png)
+
+*Plot produced by `qubit_control/sim_checks/qec_x_check.py`.*
 
 [Full PDF →](docs/qec_x_check.pdf)
 
@@ -121,6 +137,7 @@ The codebase is intentionally split into four layers so that the simulator and t
 qubit_control/
 ├── device_db.py            # real-hardware device map (empty placeholder)
 ├── device_db_sim.py        # simulator device map — points at sim/ classes
+├── start_experiment.sh     # convenience runner for the simulator experiments
 │
 ├── experiments/            # top-level EnvExperiment classes
 │   ├── fluorescence_check.py
@@ -131,6 +148,19 @@ qubit_control/
 │   ├── shuttling.py
 │   └── ms_gate.py
 │
+├── sim_checks/             # standalone EnvExperiment checks for the QEC + shuttling stack
+│   ├── transport_check.py        #   single-ion transport between zones
+│   ├── route_check.py            #   compiled-route playback
+│   ├── route_extras_check.py     #   readout / logical route tables
+│   ├── rotate_isolated_check.py  #   isolated single-ion rotation in the gate zone
+│   ├── measure_reset_check.py    #   ReadoutService measure-and-reset
+│   ├── cnot_check.py             #   CNOT decomposition (pure QuTiP via sim/ion_chain)
+│   ├── cnot_portable_check.py    #   CNOT through the full module/service stack
+│   ├── extract_syndrome_check.py #   syndrome extraction onto an ancilla
+│   ├── syndrome_circuit_check.py #   full syndrome-measurement circuit
+│   ├── correction_check.py       #   conditional bit-flip correction
+│   └── qec_x_check.py            #   full X-error QEC cycle (produces docs/qec_x_check.png)
+│
 ├── system/                 # hardware abstractions — run on both sim and real
 │   ├── modules/            # thin wrappers around one device each
 │   │   ├── laser_729.py    #   qubit laser (DDS)
@@ -140,13 +170,19 @@ qubit_control/
 │   └── services/           # higher-level sequences composed from modules
 │       ├── cooling.py      #   Doppler + optical pumping
 │       ├── gate_service.py #   MS gate, dual-frequency drive
-│       └── ion_shuttling.py
+│       ├── ion_shuttling.py#   multi-zone ion transport
+│       ├── readout.py      #   measure-and-reset of an ion in the readout zone
+│       └── qec.py          #   3-qubit bit-flip QEC: syndrome extraction + correction
 │
 ├── config/                 # central physics + hardware parameters
 │   ├── __init__.py         #   constants (Ω, ω_sec, η, T₂*, INTERACTION_ZONE, …)
 │   ├── loader.py           #   YAML-backed trap zone / route config
 │   ├── routes.yaml         #   5-zone trap layout + per-route durations + waveform refs
+│   ├── compiled_routes.py  #   precomputed QEC shuttling routes (from tools/route_compiler.py)
 │   └── waveforms/          #   one .npy per route (generated by sim/waveform_gen.py)
+│
+├── tools/                  # offline code-generation helpers
+│   └── route_compiler.py   #   route planner → emits config/compiled_routes.py
 │
 └── sim/                    # pure-Python simulator — never imported by system/
     ├── core.py             #   SimCore — replaces ARTIQ core device
