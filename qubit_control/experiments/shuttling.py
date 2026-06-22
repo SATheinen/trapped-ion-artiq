@@ -163,5 +163,5 @@ class ShuttlingCheck(EnvExperiment):
         )
 
         fig.tight_layout(rect=[0, 0, 1, 0.94])
-        fig.savefig("shuttling.pdf", bbox_inches="tight")
+        fig.savefig("shuttling.pdf")
         plt.close(fig)

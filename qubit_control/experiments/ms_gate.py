@@ -144,5 +144,5 @@ class MSGate(EnvExperiment):
         ax.set_title("MS gate output populations", loc="left", fontsize=13, pad=10)
 
         fig.tight_layout()
-        fig.savefig("ms_gate.pdf", bbox_inches="tight")
+        fig.savefig("ms_gate.pdf")
         plt.close(fig)

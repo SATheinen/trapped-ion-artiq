@@ -158,5 +158,5 @@ class RabiFlop(EnvExperiment):
         ax.set_title("Rabi flop", loc="left", fontsize=13, pad=10)
 
         fig.tight_layout()
-        fig.savefig("rabi_flop.pdf", bbox_inches="tight")
+        fig.savefig("rabi_flop.pdf")
         plt.close(fig)

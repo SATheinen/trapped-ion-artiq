@@ -152,5 +152,5 @@ class SidebandCooling(EnvExperiment):
         )
 
         fig.tight_layout(rect=[0, 0, 1, 0.94])
-        fig.savefig("sideband_cooling.pdf", bbox_inches="tight")
+        fig.savefig("sideband_cooling.pdf")
         plt.close(fig)

@@ -153,5 +153,5 @@ class SidebandSpectroscopy(EnvExperiment):
         ax.set_title("Sideband spectroscopy", loc="left", fontsize=13, pad=10)
 
         fig.tight_layout()
-        fig.savefig("sideband_spectroscopy.pdf", bbox_inches="tight")
+        fig.savefig("sideband_spectroscopy.pdf")
         plt.close(fig)

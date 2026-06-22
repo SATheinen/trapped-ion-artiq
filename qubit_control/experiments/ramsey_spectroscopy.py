@@ -157,5 +157,5 @@ class RamseySpectroscopy(EnvExperiment):
         ax.set_title("Ramsey spectroscopy", loc="left", fontsize=13, pad=10)
 
         fig.tight_layout()
-        fig.savefig("ramsey_spectroscopy.pdf", bbox_inches="tight")
+        fig.savefig("ramsey_spectroscopy.pdf")
         plt.close(fig)
